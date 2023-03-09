@@ -1,4 +1,0 @@
-name: zombiesurvival
-version: '1.19.3-SNAPSHOT'
-main: nl.bergthaler.zombiesurvival.Zombiesurvival
-api-version: 1.19
