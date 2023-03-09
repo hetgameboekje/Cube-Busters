@@ -1,0 +1,4 @@
+name: zombiesurvival
+version: '${project.version}'
+main: nl.bergthaler.zombiesurvival.Zombiesurvival
+api-version: 1.19
