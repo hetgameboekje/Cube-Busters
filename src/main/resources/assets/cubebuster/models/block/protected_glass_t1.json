@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "cubebuster:block/reinforced_glass_t1"
+  }
+}

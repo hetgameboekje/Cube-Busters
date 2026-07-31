@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "key": {
+    "A": { "item": "minecraft:iron_bars" },
+    "B": { "item": "minecraft:obsidian" },
+    "C": { "item": "minecraft:end_stone" },
+    "D": { "item": "cubebuster:protected_glass_t2" }
+  },
+  "result": {
+    "id": "cubebuster:protected_glass_t3",
+    "count": 4
+  }
+}

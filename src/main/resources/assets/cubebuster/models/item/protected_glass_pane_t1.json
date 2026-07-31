@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cubebuster:block/reinforced_glass_t1"
+  }
+}

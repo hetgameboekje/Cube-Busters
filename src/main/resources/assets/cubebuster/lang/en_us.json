@@ -1,0 +1,22 @@
+{
+  "entity.cubebuster.siege_zombie": "Siege Zombie",
+  "entity.cubebuster.green_zombie": "Green Zombie",
+  "entity.cubebuster.blue_zombie": "Blue Zombie",
+  "entity.cubebuster.red_zombie": "Red Zombie",
+  "entity.cubebuster.ender_zombie": "Ender Zombie",
+  "entity.cubebuster.screamer": "Screamer",
+  "item.cubebuster.siege_pickaxe": "Siege Pickaxe",
+  "item.cubebuster.siege_zombie_spawn_egg": "Siege Zombie Spawn Egg",
+  "item.cubebuster.green_zombie_spawn_egg": "Green Zombie Spawn Egg",
+  "item.cubebuster.blue_zombie_spawn_egg": "Blue Zombie Spawn Egg",
+  "item.cubebuster.red_zombie_spawn_egg": "Red Zombie Spawn Egg",
+  "item.cubebuster.ender_zombie_spawn_egg": "Ender Zombie Spawn Egg",
+  "item.cubebuster.screamer_spawn_egg": "Screamer Spawn Egg",
+  "block.cubebuster.protected_glass_t1": "Reinforced Glass (Tier 1)",
+  "block.cubebuster.protected_glass_t2": "Reinforced Glass (Tier 2)",
+  "block.cubebuster.protected_glass_t3": "Reinforced Glass (Tier 3)",
+  "block.cubebuster.protected_glass_pane_t1": "Reinforced Glass Pane (Tier 1)",
+  "block.cubebuster.protected_glass_pane_t2": "Reinforced Glass Pane (Tier 2)",
+  "block.cubebuster.protected_glass_pane_t3": "Reinforced Glass Pane (Tier 3)",
+  "creativetab.cubebuster": "CubeBuster"
+}

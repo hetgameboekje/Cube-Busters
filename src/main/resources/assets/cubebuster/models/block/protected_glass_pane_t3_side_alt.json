@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_glass_pane_side_alt",
+  "textures": {
+    "edge": "cubebuster:block/reinforced_glass_t3",
+    "pane": "cubebuster:block/reinforced_glass_t3"
+  }
+}

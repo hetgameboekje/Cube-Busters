@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:planks",
+    "#minecraft:logs",
+    "#minecraft:wool",
+    "#minecraft:leaves",
+    "#minecraft:dirt",
+    "#minecraft:terracotta",
+    "minecraft:sand",
+    "minecraft:red_sand",
+    "minecraft:gravel",
+    "minecraft:cobblestone",
+    "minecraft:stone",
+    "minecraft:glass",
+    "minecraft:sandstone",
+    "minecraft:hay_block"
+  ]
+}

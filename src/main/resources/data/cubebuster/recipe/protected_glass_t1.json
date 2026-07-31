@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "key": {
+    "A": { "item": "minecraft:iron_bars" },
+    "B": { "item": "minecraft:cobblestone" },
+    "C": { "item": "minecraft:glass" }
+  },
+  "result": {
+    "id": "cubebuster:protected_glass_t1",
+    "count": 4
+  }
+}

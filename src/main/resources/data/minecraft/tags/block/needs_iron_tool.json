@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "cubebuster:protected_glass_t1",
+    "cubebuster:protected_glass_t2",
+    "cubebuster:protected_glass_t3",
+    "cubebuster:protected_glass_pane_t1",
+    "cubebuster:protected_glass_pane_t2",
+    "cubebuster:protected_glass_pane_t3"
+  ]
+}

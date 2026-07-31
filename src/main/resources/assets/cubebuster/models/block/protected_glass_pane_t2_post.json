@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_glass_pane_post",
+  "textures": {
+    "edge": "cubebuster:block/reinforced_glass_t2",
+    "pane": "cubebuster:block/reinforced_glass_t2"
+  }
+}
