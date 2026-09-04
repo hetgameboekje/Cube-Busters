@@ -285,7 +285,7 @@ public class Config {
             .defineInRange("turretMaxHealth", 20.0, 1.0, 200.0);
 
     private static final ModConfigSpec.DoubleValue TURRET_THORN_DAMAGE = BUILDER
-            .comment("Base damage dealt by a Turret's shot when loaded with thorn ammo (the arrow-analog placeholder - see ModItems.THORN_AMMO). Fireworks/fire charges deal their own vanilla damage instead.")
+            .comment("Base damage dealt by a Turret's shot when loaded with thorns (see ModItems.THORNS) or any other arrow-analog ammo. Fireworks/fire charges deal their own vanilla damage instead.")
             .defineInRange("turretThornDamage", 4.0, 0.0, 50.0);
 
     // --- Mush / Infected mechanic ---
@@ -354,6 +354,61 @@ public class Config {
     private static final ModConfigSpec.IntValue ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER = BUILDER
             .comment("Regeneration amplifier granted when an Antibiotic Firework cures the mush infection effect (0 = level I).")
             .defineInRange("antibioticFireworkCureRegenAmplifier", 1, 0, 4);
+
+    // --- Cactus Economy ---
+    // Early-game defensive/utility blocks and the cactus -> sap -> juice -> mocktail crafting chain. See
+    // README/CLAUDE.md "Cactus Economy" for the full recipe chain; this is only the runtime tunables (damage,
+    // slow, trap timing, processing yields).
+
+    private static final ModConfigSpec.DoubleValue BARBED_WIRE_DAMAGE = BUILDER
+            .comment("Damage dealt per tick to entities standing inside barbed wire.")
+            .defineInRange("barbedWireDamage", 1.0, 0.0, 20.0);
+
+    private static final ModConfigSpec.DoubleValue BARBED_WIRE_SLOW_MULTIPLIER = BUILDER
+            .comment("Movement speed multiplier applied to entities while inside barbed wire (lower = slower, matches vanilla cobweb-style movement friction).")
+            .defineInRange("barbedWireSlowMultiplier", 0.4, 0.05, 1.0);
+
+    private static final ModConfigSpec.DoubleValue THORNED_BUSH_DAMAGE = BUILDER
+            .comment("Damage dealt per tick to entities touching a thorned bush (a plantable, cactus-like hazard bush).")
+            .defineInRange("thornedBushDamage", 1.0, 0.0, 20.0);
+
+    private static final ModConfigSpec.IntValue COLLAPSING_TRAPDOOR_DELAY_TICKS = BUILDER
+            .comment("How long (ticks, 20 = 1 second) after an entity steps onto a closed collapsing trapdoor before it springs open and drops them through.")
+            .defineInRange("collapsingTrapdoorDelayTicks", 20, 1, 20 * 60);
+
+    private static final ModConfigSpec.IntValue COLLAPSING_TRAPDOOR_RECLOSE_TICKS = BUILDER
+            .comment("How long (ticks, 20 = 1 second) a collapsing trapdoor stays open after springing before it automatically re-closes and resets itself as a trap.")
+            .defineInRange("collapsingTrapdoorRecloseTicks", 40, 1, 20 * 60);
+
+    private static final ModConfigSpec.IntValue CACTUS_TO_SAP = BUILDER
+            .comment("How many sap items one cactus (or one shaved cactus) processes into.")
+            .defineInRange("cactusToSap", 1, 1, 16);
+
+    private static final ModConfigSpec.IntValue SAP_TO_JUICE = BUILDER
+            .comment("How much sap is required to make one cactus juice.")
+            .defineInRange("sapToJuice", 3, 1, 16);
+
+    // --- Cactus/Pumpkin Golem ---
+    // A melee-only IronGolem-style utility mob that targets zombie-family mobs (never players). Optionally
+    // carries one cactus-limb item, which transfers its Looting enchant level to the golem's kills. The limb
+    // degrades (elytra-style: never vanishes at 0 durability, just stops functioning) and repairs via Mending or
+    // an anvil using thorns, always at a fixed XP cost rather than vanilla's scaling repair cost.
+
+    private static final ModConfigSpec.DoubleValue CACTUS_GOLEM_MAX_HEALTH = BUILDER
+            .comment("Max health of the Cactus/Pumpkin Golem.")
+            .defineInRange("cactusGolemMaxHealth", 50.0, 1.0, 2000.0);
+
+    private static final ModConfigSpec.DoubleValue CACTUS_GOLEM_ATTACK_DAMAGE = BUILDER
+            .comment("Melee attack damage of the Cactus/Pumpkin Golem.")
+            .defineInRange("cactusGolemAttackDamage", 8.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.IntValue CACTUS_GOLEM_LIMB_DAMAGE_PER_HIT = BUILDER
+            .comment("Durability points a carried cactus-limb item loses each time the golem lands a hit.")
+            .defineInRange("cactusGolemLimbDamagePerHit", 1, 0, 100);
+
+    private static final ModConfigSpec.IntValue CACTUS_GOLEM_ANVIL_REPAIR_COST_LEVELS = BUILDER
+            .comment("Fixed XP level cost to repair a cactus-limb item with thorns at an anvil, regardless of how damaged it is (overrides vanilla's scaling repair cost).")
+            .defineInRange("cactusGolemAnvilRepairCostLevels", 1, 0, 39);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -433,6 +488,17 @@ public class Config {
     public static double mushSkeletonSpawnChance;
     public static int antibioticFireworkCureRegenDurationTicks;
     public static int antibioticFireworkCureRegenAmplifier;
+    public static double barbedWireDamage;
+    public static double barbedWireSlowMultiplier;
+    public static double thornedBushDamage;
+    public static int collapsingTrapdoorDelayTicks;
+    public static int collapsingTrapdoorRecloseTicks;
+    public static int cactusToSap;
+    public static int sapToJuice;
+    public static double cactusGolemMaxHealth;
+    public static double cactusGolemAttackDamage;
+    public static int cactusGolemLimbDamagePerHit;
+    public static int cactusGolemAnvilRepairCostLevels;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -539,5 +605,17 @@ public class Config {
         mushSkeletonSpawnChance = MUSH_SKELETON_SPAWN_CHANCE.get();
         antibioticFireworkCureRegenDurationTicks = ANTIBIOTIC_FIREWORK_CURE_REGEN_DURATION_TICKS.get();
         antibioticFireworkCureRegenAmplifier = ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER.get();
+        barbedWireDamage = BARBED_WIRE_DAMAGE.get();
+        barbedWireSlowMultiplier = BARBED_WIRE_SLOW_MULTIPLIER.get();
+        thornedBushDamage = THORNED_BUSH_DAMAGE.get();
+        collapsingTrapdoorDelayTicks = COLLAPSING_TRAPDOOR_DELAY_TICKS.get();
+        collapsingTrapdoorRecloseTicks = COLLAPSING_TRAPDOOR_RECLOSE_TICKS.get();
+        cactusToSap = CACTUS_TO_SAP.get();
+        sapToJuice = SAP_TO_JUICE.get();
+
+        cactusGolemMaxHealth = CACTUS_GOLEM_MAX_HEALTH.get();
+        cactusGolemAttackDamage = CACTUS_GOLEM_ATTACK_DAMAGE.get();
+        cactusGolemLimbDamagePerHit = CACTUS_GOLEM_LIMB_DAMAGE_PER_HIT.get();
+        cactusGolemAnvilRepairCostLevels = CACTUS_GOLEM_ANVIL_REPAIR_COST_LEVELS.get();
     }
 }

@@ -35,7 +35,6 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T3.get());
                                 output.accept(ModItems.TURRET.get());
                                 output.accept(ModItems.SENTRY_TURRET.get());
-                                output.accept(ModItems.THORN_AMMO.get());
                                 output.accept(ModItems.INFECTED_CREEPER_SPAWN_EGG.get());
                                 output.accept(ModItems.MUSH_ZOMBIE_SPAWN_EGG.get());
                                 output.accept(ModItems.MUSH_SKELETON_SPAWN_EGG.get());
@@ -46,6 +45,18 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.MORTAR_AND_PESTLE.get());
                                 output.accept(ModItems.ANTIBIOTIC_PASTE.get());
                                 output.accept(ModItems.ANTIBIOTIC_FIREWORK.get());
+                                output.accept(ModItems.CACTUS_GOLEM_SPAWN_EGG.get());
+                                output.accept(ModItems.CACTUS_LIMB.get());
+                                output.accept(ModItems.THORNS.get());
+                                output.accept(ModItems.SHAVED_CACTUS.get());
+                                output.accept(ModItems.SAP.get());
+                                output.accept(ModItems.CACTUS_JUICE.get());
+                                output.accept(ModItems.ASH.get());
+                                output.accept(ModItems.MOCKTAIL.get());
+                                output.accept(ModItems.CACTUS_PLANKS.get());
+                                output.accept(ModItems.BARBED_WIRE.get());
+                                output.accept(ModItems.THORNED_BUSH.get());
+                                output.accept(ModItems.COLLAPSING_TRAPDOOR.get());
                             })
                             .build());
 

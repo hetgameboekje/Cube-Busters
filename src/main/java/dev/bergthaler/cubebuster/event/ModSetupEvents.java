@@ -3,6 +3,7 @@ package dev.bergthaler.cubebuster.event;
 import dev.bergthaler.cubebuster.Config;
 import dev.bergthaler.cubebuster.Cubebuster;
 import dev.bergthaler.cubebuster.entity.BlueZombie;
+import dev.bergthaler.cubebuster.entity.CactusGolem;
 import dev.bergthaler.cubebuster.entity.EnderZombie;
 import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.InfectedCreeper;
@@ -48,6 +49,7 @@ public final class ModSetupEvents {
         event.put(ModEntityTypes.INFECTED_CREEPER.get(), InfectedCreeper.createAttributes().build());
         event.put(ModEntityTypes.MUSH_ZOMBIE.get(), MushZombie.createAttributes().build());
         event.put(ModEntityTypes.MUSH_SKELETON.get(), MushSkeleton.createAttributes().build());
+        event.put(ModEntityTypes.CACTUS_GOLEM.get(), CactusGolem.createAttributes().build());
     }
 
     @SubscribeEvent

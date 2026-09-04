@@ -92,37 +92,47 @@ Also added: `mush_infection` MobEffect (`effect/MushInfectionMobEffect.java`, `r
 | AI base | ✅ | Uses vanilla `RangedAttackGoal` (not `RangedBowAttackGoal` — see Immobility note) + `NearestAttackableTargetGoal<Monster>` unmodified, wired in `Turret#registerGoals()`. Targets hostile mobs, not the player — it's a defensive mob. |
 | Immobility | ✅ | `Turret#travel(Vec3)` discards horizontal input (`super.travel(Vec3.ZERO)`) regardless of what any goal tries to do — stronger than just omitting wander goals, since `RangedAttackGoal` itself calls `moveTo()` when a target is out of range. Verified by inspection that `RangedAttackGoal` still aims/fires correctly at a stationary mob (it just never manages to close distance beyond its fixed radius, which for a turret is the desired behavior) — **not verified in a running client/server**, see Verification note below. |
 | Sentry/manual toggle | ✅ | Shift-right-click with an empty hand flips `Turret#isActive()`, which adds/removes the attack goal from the `GoalSelector` at runtime (`updateAttackGoal()`). Also polled against `level().hasNeighborSignal(...)` every 10 ticks in `aiStep()` — a redstone signal forces the turret off regardless of its manual state, satisfying the "or a nearby lever/redstone signal" alternative from the spec without needing a companion block. |
-| Multi-projectile support | ✅ | Single-slot ammo (`SynchedEntityData` `ItemStack`, right-click to load/withdraw, mirrors item frames). `Turret#performRangedAttack` switches on the loaded item: `minecraft:firework_rocket` → `FireworkRocketEntity`, `minecraft:fire_charge` → `SmallFireball`, anything else (including the new `THORN_AMMO` placeholder) → a plain `Arrow` with configurable damage (`Config.turretThornDamage`). No ammo loaded = turret aims but never fires. |
+| Multi-projectile support | ✅ | Single-slot ammo (`SynchedEntityData` `ItemStack`, right-click to load/withdraw, mirrors item frames). `Turret#performRangedAttack` switches on the loaded item: `minecraft:firework_rocket` → `FireworkRocketEntity`, `minecraft:fire_charge` → `SmallFireball`, anything else (including `ModItems.THORNS`) → a plain `Arrow` with configurable damage (`Config.turretThornDamage`). No ammo loaded = turret aims but never fires. |
 | Crafting recipe | ✅ | Two recipes, both shaped 3x3: `data/cubebuster/recipe/turret.json` (iron ingots + dispenser + crossbow + **`minecraft:oak_stairs`** as the "seat" placeholder — no seat item exists anywhere in the codebase yet, oak stairs picked as the closest vanilla stand-in, flagged here rather than silently guessed) and `turret_sentry.json` (same plus an eye of ender, per spec, producing the sentry variant that starts active instead of needing a manual toggle). |
 | "Watching eye" core item | ⬜ | Still concept-only, not built — deliberately. Turret's ammo/toggle mechanisms don't hardcode "only turrets can hold an item slot" (the ammo slot is a plain field on `Turret`, not a shared/global registry), so a future standalone "watching eye" item for doors/traps isn't architecturally blocked, it just doesn't exist yet. |
-| Thorn ammo | 🟡 | Turret accepts a placeholder `cubebuster:thorn_ammo` item (plain `Item`, see `ModItems.THORN_AMMO`) since no real "thorns" item exists in this branch. **Follow-up once the Cactus Economy branch merges**: delete the placeholder and point `Turret#isValidAmmo`/`performRangedAttack` at the real thorns item instead. |
+| Thorn ammo | ✅ | Wired directly to the real `ModItems.THORNS` item from the Cactus Economy chain (the placeholder `THORN_AMMO` item was removed once both branches were merged together). |
 
 **Verification note:** built and compiles clean (`./gradlew compileJava` / `./gradlew build`), but not run in a live client/server in this environment — no in-game confirmation that targeting, firing, the toggle, or the recipes actually behave as intended. Treat as implemented-but-unplaytested.
 
 ---
 
 ## Cactus Economy (early game)
-**Status: ✅ Fully specced — not built**
+**Status: ✅ Built**
+
+Blocks/behavior in `dev.bergthaler.cubebuster.block` (`BarbedWireBlock`, `ThornedBushBlock`,
+`CollapsingTrapdoorBlock`); shearing in `event/CactusShearHandler.java`; brewing wiring in
+`event/ModBrewingRecipes.java`; recipes under `data/cubebuster/recipes/`; tunables in `Config.java`
+("Cactus Economy" section).
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Barbed wire / thorned bush / collapsing trapdoor | ✅ | Easy to craft/find, vanilla-analog behavior |
-| Shearing → thorns + shaved cactus | ✅ | |
-| Shaved cactus → planks or sap | ✅ | |
-| Sap → juice → mocktail chain | ✅ | 1 cactus = 1 sap, 3 sap = 1 juice, filtered with ash via brewing stand |
-| No alcohol | ✅ | |
+| Barbed wire / thorned bush / collapsing trapdoor | ✅ | Barbed wire = cobweb-shaped hazard (slow + DoT); thorned bush = non-solid `BushBlock` with cactus-style contact damage; collapsing trapdoor springs open a configurable delay after something steps on it, then auto-recloses (reusable trap, not a one-shot break) |
+| Shearing → thorns + shaved cactus | ✅ | `CactusShearHandler` - shears + right-click on a cactus block |
+| Shaved cactus → planks or sap | ✅ | Both are separate crafting-table recipes off the same item |
+| Sap → juice → mocktail chain | ✅ | 1 cactus (or shaved cactus) = 1 sap, 3 sap = 1 juice; juice + ash at a brewing stand = mocktail (`ModBrewingRecipes`, `AnvilUpdateEvent`-style `RegisterBrewingRecipesEvent` hook). Ash is smelted from rotten flesh |
+| No alcohol | ✅ | No alcohol-themed items/flavor text anywhere in the chain |
 
 ---
 
 ## Cactus/Pumpkin Golem
-**Status: ✅ Fully specced — not built**
+**Status: ✅ Built**
+
+`entity/CactusGolem.java` (extends vanilla `IronGolem`, goals fully replaced - targets `Zombie` and
+subclasses, never players); Looting/degrade/repair logic in `event/CactusLimbHandler.java`; tunables
+in `Config.java` ("Cactus/Pumpkin Golem" section). Reuses vanilla's `IronGolemRenderer`/model
+wholesale rather than bespoke art - see the CLAUDE.md note for the follow-up.
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Base behavior | ✅ | Iron/snow golem–style, hugs zombies to death |
-| Looting enchant transfer | ✅ | Cactus-limb items only |
-| Item degradation | ✅ | Elytra-style (doesn't vanish on break) |
-| Repair | ✅ | Mending or anvil, thorns as repair material, fixed at 1 XP level |
+| Base behavior | ✅ | Iron golem–style, hugs zombie-family mobs to death (never players) |
+| Looting enchant transfer | ✅ | Cactus-limb items only. Vanilla's own Looting enchantment effect is hard-gated to player attackers (see `data/minecraft/enchantment/looting.json`'s `entity_properties: player` requirement), so this is a custom `LivingDropsEvent` handler that reads the limb's Looting level and duplicates drops with a per-level chance - an approximation of vanilla's loot reroll, not a byte-for-byte reproduction |
+| Item degradation | ✅ | Elytra-style: damage value is set directly rather than via `ItemStack#hurtAndBreak`, so it never vanishes/breaks at max damage, just stops granting Looting |
+| Repair | ✅ | Mending works via the `enchantable/durability` tag; anvil repair with thorns is fixed at 1 XP level via a custom `AnvilUpdateEvent` handler (bypasses vanilla's scaling cost) |
 
 ---
 

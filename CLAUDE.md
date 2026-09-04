@@ -122,8 +122,8 @@ redstone signal at its position (polled in `aiStep()`, no block entity
 needed). Ammo is a single `SynchedEntityData` `ItemStack` slot loaded/
 withdrawn by right-click (mirrors item frames); `performRangedAttack`
 switches projectile type on whatever's loaded — firework rocket, fire
-charge, or a fallback `Arrow` (used for the placeholder `THORN_AMMO` item
-too, see follow-up below).
+charge, or a fallback `Arrow` (used for `ModItems.THORNS`, from the Cactus
+Economy chain below, and anything else not specifically handled).
 
 Two crafting recipes (`data/cubebuster/recipe/turret.json` and
 `turret_sentry.json`): iron + dispenser + crossbow + `minecraft:oak_stairs`
@@ -131,12 +131,9 @@ as a placeholder "seat" ingredient (no seat item exists in this codebase),
 the sentry variant adds an eye of ender and starts active instead of
 needing the manual toggle.
 
-**Known follow-up:** `ModItems.THORN_AMMO` is a placeholder plain `Item` —
-once the Cactus Economy branch's real thorns item lands, swap
-`Turret#isValidAmmo`/`performRangedAttack` over to it and delete the
-placeholder. See `newmechanics.md`'s Turret section for the full
-sub-item-by-sub-item status and design notes (including that this was
-built and compiles clean but not verified in a running client/server).
+See `newmechanics.md`'s Turret section for the full sub-item-by-sub-item
+status and design notes (including that this was built and compiles clean
+but not verified in a running client/server).
 
 ## Currently shipped: Mush / Infected mechanic
 
@@ -168,6 +165,50 @@ a held item in the other hand), specifically to avoid needing
 `Item#getCraftingRemainingItem()` (which is `final` in vanilla and can't
 cleanly self-reference). Antibiotic Paste is then assembled into an
 Antibiotic Firework via an ordinary crafting recipe.
+
+## Currently shipped: Cactus Economy & Cactus/Pumpkin Golem
+
+Early-game defensive/utility blocks and a cactus sap → juice → mocktail
+crafting chain (net-new, no dependency on other systems), plus a melee
+utility golem that consumes the chain's thorns as its repair material.
+
+- **Blocks**: `BarbedWireBlock`, `ThornedBushBlock`,
+  `CollapsingTrapdoorBlock` (all in `block/`) — cobweb-shaped
+  slow+damage hazard, a non-solid cactus-analog bush, and a trapdoor that
+  springs open a short delay after something steps on it and
+  auto-recloses (a reusable trap, not a one-shot break).
+- **Chain**: shearing a cactus (`event/CactusShearHandler.java`) yields
+  thorns + shaved cactus; shaved cactus branches into cactus planks (+
+  any planks) or sap; 3 sap → juice; juice + ash (smelted from rotten
+  flesh) at a brewing stand → mocktail
+  (`event/ModBrewingRecipes.java`, a `RegisterBrewingRecipesEvent` hook).
+  No alcohol-themed items or flavor text anywhere in this chain (explicit
+  project rule).
+- **Cactus/Pumpkin Golem** (`entity/CactusGolem.java`): extends vanilla
+  `IronGolem`, but `registerGoals()` fully replaces its village-defense
+  goals with a plain wander/look/melee set targeting `Zombie` and its
+  subclasses only (Husks, Drowned, every cubebuster zombie variant) —
+  never players. Reuses vanilla's `IronGolemRenderer`/model wholesale
+  rather than bespoke art (a placeholder worth revisiting).
+- **Cactus limb + Looting transfer**: right-clicking the golem with a
+  `cactus_limb` item attaches it to the golem's MAINHAND equipment slot.
+  Vanilla's own Looting enchantment effect is hard-gated to player
+  attackers (`data/minecraft/enchantment/looting.json`'s
+  `entity_properties: player` requirement), so `CactusLimbHandler`
+  implements the transfer itself: on `LivingDropsEvent`, it reads the
+  limb's Looting level and duplicates drops with a per-level chance
+  (an approximation of vanilla's reroll, not identical to it).
+- **Elytra-style degradation**: `CactusLimbHandler` sets the limb's
+  damage value directly on every golem hit rather than calling
+  `ItemStack#hurtAndBreak`, so it never vanishes/breaks at max damage —
+  it just stops granting Looting once maxed out.
+- **Repair**: Mending works via the `enchantable/durability` item tag;
+  anvil repair with thorns is fixed at 1 XP level via a custom
+  `AnvilUpdateEvent` handler in `CactusLimbHandler`, bypassing vanilla's
+  scaling repair cost.
+- All tunables (damage, slow, trap timing, sap/juice yields, golem
+  HP/damage, limb degrade rate, anvil repair cost) live in `Config.java`
+  under the "Cactus Economy" / "Cactus/Pumpkin Golem" sections.
 
 ## Known bugs (fixed)
 
@@ -219,13 +260,11 @@ existing codebase:
     `Config.java` pattern.
 - ~~**Turret**~~ — done (MVP), see "Currently shipped: Turret" above.
   Entity-based, reuses vanilla `RangedAttackGoal` +
-  `NearestAttackableTargetGoal` unmodified. Thorn ammo is still a
-  placeholder item pending the Cactus Economy branch merging.
-- **Cactus economy** — early-game survival items (barbed wire, thorned
-  bush, collapsing trapdoor) and a cactus sap → juice → mocktail crafting
-  chain. Net-new, no dependency on existing systems.
-- **Cactus/Pumpkin Golem** — new mob, elytra-style durability item with
-  Looting-enchant transfer. Net-new.
+  `NearestAttackableTargetGoal` unmodified. Now wired to the real
+  `ModItems.THORNS` item from the Cactus Economy work below (no more
+  placeholder ammo item).
+- ~~**Cactus economy**~~ / ~~**Cactus/Pumpkin Golem**~~ — done, see
+  "Currently shipped: Cactus Economy & Cactus/Pumpkin Golem" above.
 - **Custom structures** — mineshafts/sieged villages/bunkers as
   SiegeZombie/mush spawn points. Concept only, not designed in detail yet.
 

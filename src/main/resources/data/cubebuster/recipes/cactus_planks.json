@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    { "item": "cubebuster:shaved_cactus" },
+    { "tag": "minecraft:planks" }
+  ],
+  "result": {
+    "id": "cubebuster:cactus_planks",
+    "count": 2
+  }
+}

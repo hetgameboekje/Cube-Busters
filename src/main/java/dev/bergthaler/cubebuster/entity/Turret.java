@@ -125,9 +125,8 @@ public class Turret extends PathfinderMob implements RangedAttackMob {
         } else if (ammo.is(Items.FIRE_CHARGE)) {
             fireFireball(target);
         } else {
-            // Thorn ammo (see ModItems.THORN_AMMO) and anything else not specifically handled above falls back
-            // to a plain arrow shot - functionally the "thorn-arrow" projectile until the real Cactus Economy
-            // thorns item/behavior lands (see class javadoc on ModItems.THORN_AMMO for that follow-up).
+            // Thorns (see ModItems.THORNS) and anything else not specifically handled above falls back to a
+            // plain arrow shot - functionally the "thorn-arrow" projectile from the spec.
             fireArrow(target, ammo);
         }
         // Ammo is consumed 1-per-shot regardless of mode - infinite-ammo sentries aren't part of the spec.
@@ -189,7 +188,7 @@ public class Turret extends PathfinderMob implements RangedAttackMob {
 
     private static boolean isValidAmmo(ItemStack stack) {
         return stack.is(Items.FIREWORK_ROCKET) || stack.is(Items.FIRE_CHARGE) || stack.is(Items.ARROW)
-                || stack.is(ModItems.THORN_AMMO.get());
+                || stack.is(ModItems.THORNS.get());
     }
 
     // --- Sentry / manual toggle -------------------------------------------------------------------------------
