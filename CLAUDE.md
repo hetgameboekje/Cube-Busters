@@ -44,10 +44,12 @@ src/main/java/dev/bergthaler/cubebuster/
   entity/ai/               custom Goal implementations
   event/                   spawning & combat @SubscribeEvent handlers
   registry/                DeferredRegister holders: blocks, items, entity types, creative tab
-  tags/                    ModBlockTags - block-break permission logic for protected glass
+  tags/                    ModBlockTags - block-break permission logic for protected glass,
+                           plus the cubebuster:mush_blocks density tag used by Horde Boss
 src/main/resources/
   assets/cubebuster/   textures, models, blockstates, lang
-  data/cubebuster/     recipes, loot tables, biome modifiers (neoforge spawn placements)
+  data/cubebuster/     recipes, loot tables, biome modifiers (neoforge spawn placements),
+                       block tags (mush_blocks - currently a placeholder, see Horde Boss above)
   data/zombiemechanics/       datapack-editable block tags (breakable/unbreakable/protected_tierN)
 ```
 
@@ -103,6 +105,38 @@ event is raised on.
 This was the blocking prerequisite for the Horde Boss cap system
 (see `NEW_MECHANICS.md`) — it's unblocked now.
 
+## Currently shipped: Horde Boss (integration layer)
+
+Recurring boss event, triggered per-player every `Config.hordeBossCheckIntervalTicks`
+by `event/HordeBossSpawnHandler.java`: (aggro score, read from `AggroManager.getScore` -
+this layer never writes to it) × (mush block density near the player) crossing
+`Config.hordeBossTriggerThreshold`, scaled by a 7-Days-to-Die-style day/night pacing
+curve (`event/HordeBossPacing.java`) and gated by the daily/cluster/server spawn caps
+and a post-boss cooldown (`event/HordeBossCapManager.java`). Spawns `entity/HordeBoss.java`
+(a bigger, tankier `Zombie` variant, same `ownerUUID` pattern as `SiegeZombie`/`Screamer`)
+via `OpenAirSpawner`, with loot at `data/cubebuster/loot_table/entities/horde_boss.json`.
+
+Density is a **placeholder block-count scan**: `ModBlockTags.MUSH_BLOCKS`
+(`cubebuster:mush_blocks`) is the tag `event/HordeBossDensity.java` counts within
+`Config.hordeBossDensityRadius` blocks of the player. The actual Mush/Infected mechanic
+(real mush blocks) is a separate, not-yet-merged PR — until it lands and tags its blocks
+into `data/cubebuster/tags/block/mush_blocks.json`, that file instead tags
+`minecraft:brown_mushroom_block` as a harmless stand-in so this code has something real
+to count. Remove the placeholder once real mush blocks exist.
+
+Two cap-tracking mechanisms, chosen per scope:
+- **Per-player daily count + cooldown** (`hordeBossPlayerDailyCap`, `hordeBossCooldownTicks`):
+  the same NeoForge data-attachment pattern as `AggroState`/`ModAttachmentTypes.AGGRO` -
+  see `event/HordeBossState.java` + `ModAttachmentTypes.HORDE_BOSS_CAP`.
+- **Server-wide daily count + Chebyshev chunk-distance clustering**
+  (`hordeBossServerDailyCap`, `hordeBossClusterCap`, `hordeBossClusterChunkRadius`):
+  vanilla `SavedData` on the Overworld, not an attachment - this state is genuinely
+  server-scoped rather than per-player. See `event/HordeBossSavedData.java`.
+
+Both roll over at the Minecraft day boundary, computed from the Overworld's total game
+time divided by 24000 (not `Level.getDayTime()`, which sleeping/commands can shift) -
+see `HordeBossCapManager.currentDay`.
+
 ## Known bugs (fixed)
 
 ### 1. Aggro gain ignored creative/spectator mode — fixed
@@ -137,21 +171,14 @@ existing codebase:
   system below.
 - **Mush / Infected mechanic** — new creeper variant, spore/mush blocks,
   mush zombies, cure-item crafting chain (mortar & pestle). Net-new
-  system, doesn't touch existing zombie variants directly.
-- **Horde Boss** — recurring boss event, triggered by (per-player aggro
-  score) × (mush block density near player). Integration layer only —
-  reads from Aggro and Mush systems, they don't call into each other or
-  into the boss.
-  - Daily cap: 3/player, 15/server hard ceiling.
-  - Chunk clustering (Chebyshev distance): ≤5 chunks = clustered group
-    cap of 9 total; ≥6 chunks = individual 3/player cap.
-  - Cap consumption is sticky to the player (survives leaving a cluster).
-  - Cannot reuse vanilla mobcap for the daily quota (snapshot vs.
-    persistent) — needs a custom per-player counter, reset at day
-    boundary. Vanilla's per-player density-check *pattern* is reusable
-    for the live clustering calculation only.
-  - All thresholds config-adjustable, following the existing
-    `Config.java` pattern.
+  system, doesn't touch existing zombie variants directly. Still not
+  merged — the Horde Boss system below currently scans a placeholder tag
+  (`ModBlockTags.MUSH_BLOCKS`) in its place, see "Currently shipped:
+  Horde Boss" above.
+- ~~**Horde Boss**~~ — done, see "Currently shipped: Horde Boss
+  (integration layer)" above. Density check method (block-count scan) and
+  the post-boss cooldown were both left open in the original design and
+  have since been decided — see `NEW_MECHANICS.md`.
 - **Turret** — reuse vanilla skeleton AI goals
   (`RangedAttackGoal`/`RangedBowAttackGoal` + `NearestAttackableTargetGoal`)
   for targeting/combat rather than writing custom AI. Still needs:

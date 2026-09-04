@@ -35,6 +35,20 @@ public final class ModBlockTags {
     public static final TagKey<Block> PROTECTED_TIER3 = tag("protected_tier3");
 
     /**
+     * Blocks counted by the Horde Boss trigger's mush-density scan (see {@code event.HordeBossDensity}). Lives
+     * under the {@code cubebuster} namespace (not {@value #NAMESPACE}) since it isn't part of the
+     * SiegeZombie block-break tag family above - it's a plain membership tag for a different system.
+     * <p>
+     * <b>Placeholder dependency:</b> the actual Mush/Infected mechanic (mush blocks, spore spread) is designed
+     * but not yet merged into this branch (separate PR). Until that PR lands and tags its real mush block(s)
+     * into {@code data/cubebuster/tags/block/mush_blocks.json}, that file instead tags
+     * {@code minecraft:brown_mushroom_block} as a harmless placeholder purely so the density-scan code has
+     * something real to count during testing. Remove the placeholder entry once real mush blocks exist.
+     */
+    public static final TagKey<Block> MUSH_BLOCKS =
+            TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("cubebuster", "mush_blocks"));
+
+    /**
      * Hardcoded on top of the datapack tags so a modpack/datapack mistake (or a missing tag entry) can never
      * make these breakable. These are the blocks explicitly called out as "must never break".
      */
