@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "S S",
+    " B "
+  ],
+  "key": {
+    "S": { "item": "minecraft:cobblestone" },
+    "B": { "item": "minecraft:stick" }
+  },
+  "result": {
+    "id": "cubebuster:mortar_and_pestle",
+    "count": 1
+  }
+}

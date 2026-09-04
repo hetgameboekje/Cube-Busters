@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "cubebuster:item/mortar_and_pestle"
+  }
+}

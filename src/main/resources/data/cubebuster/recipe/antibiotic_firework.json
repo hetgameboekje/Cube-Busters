@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "cubebuster:antibiotic_paste" },
+    { "item": "minecraft:paper" },
+    { "item": "minecraft:gunpowder" }
+  ],
+  "result": {
+    "id": "cubebuster:antibiotic_firework",
+    "count": 3
+  }
+}

@@ -36,6 +36,16 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.TURRET.get());
                                 output.accept(ModItems.SENTRY_TURRET.get());
                                 output.accept(ModItems.THORN_AMMO.get());
+                                output.accept(ModItems.INFECTED_CREEPER_SPAWN_EGG.get());
+                                output.accept(ModItems.MUSH_ZOMBIE_SPAWN_EGG.get());
+                                output.accept(ModItems.MUSH_SKELETON_SPAWN_EGG.get());
+                                output.accept(ModItems.MUSH_BLOCK.get());
+                                output.accept(ModItems.MUSH_BALL.get());
+                                output.accept(ModItems.INFECTION_POTION.get());
+                                output.accept(ModItems.DUST.get());
+                                output.accept(ModItems.MORTAR_AND_PESTLE.get());
+                                output.accept(ModItems.ANTIBIOTIC_PASTE.get());
+                                output.accept(ModItems.ANTIBIOTIC_FIREWORK.get());
                             })
                             .build());
 

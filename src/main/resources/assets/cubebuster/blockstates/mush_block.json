@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "layers=1": { "model": "cubebuster:block/mush_block" },
+    "layers=2": { "model": "cubebuster:block/mush_block" },
+    "layers=3": { "model": "cubebuster:block/mush_block" },
+    "layers=4": { "model": "cubebuster:block/mush_block" },
+    "layers=5": { "model": "cubebuster:block/mush_block" },
+    "layers=6": { "model": "cubebuster:block/mush_block" },
+    "layers=7": { "model": "cubebuster:block/mush_block" },
+    "layers=8": { "model": "cubebuster:block/mush_block" }
+  }
+}
