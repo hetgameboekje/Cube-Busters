@@ -61,8 +61,8 @@ src/main/resources/
   saved under `"AggroOwner"` in `addAdditionalSaveData`/
   `readAdditionalSaveData`). Any mob whose behavior should stay tied to the
   specific player that caused its spawn (not whichever player it happens
-  to be nearest to) needs this — `SiegeZombie` currently does **not** have
-  it (see Known Bugs below).
+  to be nearest to) needs this — `SiegeZombie` has it too now (see
+  Known bugs below).
 - Comments in `Config.java` are user-facing documentation (shown by config
   GUIs) — write them for a server admin, not a fellow programmer.
 
@@ -82,105 +82,25 @@ Boss system being designed needs aggro that **never decays/resets** and is
 **persistent** — this is a behavior change to `AggroManager`, not a new
 system.
 
-## Known bugs (confirmed by source review, not yet fixed)
+## Known bugs (fixed)
 
-### 1. Aggro gain ignores creative/spectator mode
-Two gain paths add score regardless of the player's game mode:
+### 1. Aggro gain ignored creative/spectator mode — fixed
+Both `event/AggroInteractionHandler.java` (`maybeGainScore()`) and
+`entity/ai/SiegeZombieSightAggroGoal.java` (`canUse()`) now guard on
+`isCreative()`/`isSpectator()` before adding score.
 
-- `event/AggroInteractionHandler.java`, `maybeGainScore()` (~line 60) —
-  container-open and bed-use gain has no `isCreative()`/`isSpectator()`
-  check.
-- `entity/ai/SiegeZombieSightAggroGoal.java`, `canUse()` (~line 36) —
-  sight-based gain has the same gap. Vanilla mobs can still target/see
-  creative players (they just take no damage), so this fires normally.
+### 2. SiegeZombie had no owner, could raise the wrong player's aggro — fixed
+`SiegeZombie` now carries an `ownerUUID` field (mirroring `Screamer`'s
+pattern) with NBT persistence under `"AggroOwner"`.
+`AggroSpawnHandler.trySpawnFor()` tags each force-spawned SiegeZombie with
+the triggering player's UUID, and `SiegeZombieSightAggroGoal` credits
+sight-based aggro to that owner rather than whoever the zombie currently
+has targeted — so a zombie spawned for player A can no longer raise
+player B's score by retargeting onto B.
 
-**Fix:** guard both call sites:
-```java
-// AggroInteractionHandler.maybeGainScore(...)
-private static void maybeGainScore(ServerPlayer player) {
-    if (player.isCreative() || player.isSpectator()) {
-        return;
-    }
-    // ...existing cooldown + addScore logic unchanged
-}
-```
-```java
-// SiegeZombieSightAggroGoal.canUse(...)
-if (target instanceof ServerPlayer player
-        && !player.isCreative() && !player.isSpectator()
-        && siegeZombie.hasLineOfSight(target)) {
-    AggroManager.addScore(player, Config.aggroSightGainAmount);
-}
-```
-
-### 2. SiegeZombie has no owner — can raise the wrong player's aggro
-`SiegeZombie`'s target selector
-(`entity/SiegeZombie.java`, `registerGoals()`) is a plain
-`NearestAttackableTargetGoal<>(this, Player.class, false)` with
-`FOLLOW_RANGE` 48 — it targets **whichever player is nearest**, not the
-player whose aggro caused it to spawn. `SiegeZombieSightAggroGoal` then
-credits sight-based aggro to `siegeZombie.getTarget()` — i.e. whoever it's
-currently targeting.
-
-With 2+ players online, a SiegeZombie spawned because of Player A's aggro
-can retarget to Player B the moment B comes within its follow range,
-crediting **B's** score for a mob B had no part in causing — which reads
-as "my aggro went up and the other player wasn't even near [whatever
-caused it]."
-
-`Screamer` already solved exactly this class of problem with an
-`ownerUUID` field (used today to enforce the per-player Screamer cap) —
-`SiegeZombie` never got the same treatment.
-
-**Fix:** give `SiegeZombie` the same ownership field, and gate the
-sight-aggro credit on ownership instead of current AI target:
-
-```java
-// SiegeZombie.java — mirror Screamer's ownerUUID field + NBT save/load
-private UUID ownerUUID;
-
-public void setOwnerUUID(UUID ownerUUID) { this.ownerUUID = ownerUUID; }
-public UUID getOwnerUUID() { return ownerUUID; }
-
-@Override
-protected void addAdditionalSaveData(CompoundTag tag) {
-    super.addAdditionalSaveData(tag);
-    if (ownerUUID != null) tag.putUUID("AggroOwner", ownerUUID);
-}
-
-@Override
-protected void readAdditionalSaveData(CompoundTag tag) {
-    super.readAdditionalSaveData(tag);
-    if (tag.hasUUID("AggroOwner")) ownerUUID = tag.getUUID("AggroOwner");
-}
-```
-```java
-// AggroSpawnHandler.trySpawnFor(...) — tag SiegeZombies the same way Screamers already are
-for (int i = 0; i < siegeZombieCount; i++) {
-    SiegeZombie zombie = OpenAirSpawner.trySpawnNear(level, ModEntityTypes.SIEGE_ZOMBIE.get(), center,
-            Config.aggroSafeZoneRadius, Config.aggroSpawnMaxRadius, maxVerticalDelta, true);
-    if (zombie != null) {
-        zombie.setOwnerUUID(player.getUUID());
-    }
-}
-```
-```java
-// SiegeZombieSightAggroGoal.canUse(...) — credit the owner, not the current AI target
-LivingEntity target = siegeZombie.getTarget();
-UUID owner = siegeZombie.getOwnerUUID();
-if (target instanceof ServerPlayer player
-        && owner != null && owner.equals(player.getUUID())
-        && !player.isCreative() && !player.isSpectator()
-        && siegeZombie.hasLineOfSight(target)) {
-    AggroManager.addScore(player, Config.aggroSightGainAmount);
-}
-```
-
-**Note:** naturally-spawned SiegeZombies (village sieges, timed night
-spawns — not from the aggro system) will have `ownerUUID == null`. Decide
-whether those should ever grant sight-aggro at all (currently: no, under
-this fix, since there's no owner to credit) — probably correct, since
-they weren't caused by anyone's aggro score.
+Naturally-spawned SiegeZombies (village sieges, timed night spawns — not
+from the aggro system) have `ownerUUID == null` and so never grant
+sight-aggro, since there's no owner to credit.
 
 ---
 

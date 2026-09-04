@@ -58,6 +58,9 @@ public final class AggroInteractionHandler {
     }
 
     private static void maybeGainScore(ServerPlayer player) {
+        if (player.isCreative() || player.isSpectator()) {
+            return;
+        }
         ServerLevel level = player.serverLevel();
         long now = level.getGameTime();
         Long last = lastGainGameTime.get(player.getUUID());

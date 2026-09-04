@@ -2,6 +2,7 @@ package dev.bergthaler.cubebuster.event;
 
 import dev.bergthaler.cubebuster.Config;
 import dev.bergthaler.cubebuster.entity.Screamer;
+import dev.bergthaler.cubebuster.entity.SiegeZombie;
 import dev.bergthaler.cubebuster.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -69,8 +70,11 @@ final class AggroSpawnHandler {
             }
         }
         for (int i = 0; i < siegeZombieCount; i++) {
-            OpenAirSpawner.trySpawnNear(level, ModEntityTypes.SIEGE_ZOMBIE.get(), center,
+            SiegeZombie zombie = OpenAirSpawner.trySpawnNear(level, ModEntityTypes.SIEGE_ZOMBIE.get(), center,
                     Config.aggroSafeZoneRadius, Config.aggroSpawnMaxRadius, maxVerticalDelta, true);
+            if (zombie != null) {
+                zombie.setOwnerUUID(player.getUUID());
+            }
         }
     }
 

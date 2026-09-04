@@ -12,8 +12,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+
+import java.util.UUID;
 
 /**
  * An aggressive zombie variant that can chew through most blocks to reach its target.
@@ -23,6 +26,11 @@ import net.minecraft.world.level.Level;
  * aggro-gated despawning).
  */
 public class SiegeZombie extends Zombie {
+    // Which player's aggro score this SiegeZombie was force-spawned for (null for naturally-spawned ones, e.g.
+    // village sieges / timed night spawns). Mirrors Screamer's ownerUUID pattern - see
+    // SiegeZombieSightAggroGoal, which credits sight-aggro to this owner rather than whichever player it
+    // currently targets, so a zombie spawned for player A can't raise player B's score just by retargeting.
+    private UUID ownerUUID;
 
     public SiegeZombie(EntityType<? extends Zombie> type, Level level) {
         super(type, level);
@@ -30,6 +38,14 @@ public class SiegeZombie extends Zombie {
         // the pickaxe, regardless of spawn source (natural spawn, siege spawn-in, summon command, spawn egg).
         this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.SIEGE_PICKAXE.get()));
         this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
+    }
+
+    public void setOwnerUUID(UUID ownerUUID) {
+        this.ownerUUID = ownerUUID;
+    }
+
+    public UUID getOwnerUUID() {
+        return ownerUUID;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -83,5 +99,21 @@ public class SiegeZombie extends Zombie {
             return;
         }
         super.checkDespawn();
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (ownerUUID != null) {
+            tag.putUUID("AggroOwner", ownerUUID);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.hasUUID("AggroOwner")) {
+            ownerUUID = tag.getUUID("AggroOwner");
+        }
     }
 }
