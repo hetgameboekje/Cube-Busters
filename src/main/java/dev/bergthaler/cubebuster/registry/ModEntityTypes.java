@@ -2,8 +2,13 @@ package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
 import dev.bergthaler.cubebuster.entity.BlueZombie;
+import dev.bergthaler.cubebuster.entity.CactusGolem;
 import dev.bergthaler.cubebuster.entity.EnderZombie;
 import dev.bergthaler.cubebuster.entity.GreenZombie;
+import dev.bergthaler.cubebuster.entity.InfectedCreeper;
+import dev.bergthaler.cubebuster.entity.MushSkeleton;
+import dev.bergthaler.cubebuster.entity.MushZombie;
+import dev.bergthaler.cubebuster.entity.HordeBoss;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
@@ -71,6 +76,43 @@ public final class ModEntityTypes {
                     .eyeHeight(1.0F)
                     .clientTrackingRange(10)
                     .build("turret"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<InfectedCreeper>> INFECTED_CREEPER = ENTITY_TYPES.register("infected_creeper",
+            () -> EntityType.Builder.<InfectedCreeper>of(InfectedCreeper::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.7F)
+                    .clientTrackingRange(8)
+                    .build("infected_creeper"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<MushZombie>> MUSH_ZOMBIE = ENTITY_TYPES.register("mush_zombie",
+            () -> EntityType.Builder.<MushZombie>of(MushZombie::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F)
+                    .eyeHeight(1.74F)
+                    .clientTrackingRange(8)
+                    .build("mush_zombie"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<MushSkeleton>> MUSH_SKELETON = ENTITY_TYPES.register("mush_skeleton",
+            () -> EntityType.Builder.<MushSkeleton>of(MushSkeleton::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F)
+                    .eyeHeight(1.74F)
+                    .clientTrackingRange(8)
+                    .build("mush_skeleton"));
+
+    // Same hitbox as vanilla IronGolem, which this extends.
+    public static final DeferredHolder<EntityType<?>, EntityType<CactusGolem>> CACTUS_GOLEM = ENTITY_TYPES.register("cactus_golem",
+            () -> EntityType.Builder.<CactusGolem>of(CactusGolem::new, MobCategory.MISC)
+                    .sized(1.4F, 2.7F)
+                    .eyeHeight(2.3F)
+                    .clientTrackingRange(10)
+                    .build("cactus_golem"));
+
+    // Force-spawned only by the Horde Boss integration layer (HordeBossSpawnHandler) - no natural spawn
+    // placement. Bigger hitbox than the other variants so it reads as a boss at a glance.
+    public static final DeferredHolder<EntityType<?>, EntityType<HordeBoss>> HORDE_BOSS = ENTITY_TYPES.register("horde_boss",
+            () -> EntityType.Builder.<HordeBoss>of(HordeBoss::new, MobCategory.MONSTER)
+                    .sized(0.9F, 2.6F)
+                    .eyeHeight(2.3F)
+                    .clientTrackingRange(10)
+                    .build("horde_boss"));
 
     private ModEntityTypes() {
     }

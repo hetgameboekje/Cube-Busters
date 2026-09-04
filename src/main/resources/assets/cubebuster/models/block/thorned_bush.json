@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "cubebuster:block/thorned_bush",
+    "particle": "cubebuster:block/thorned_bush"
+  }
+}

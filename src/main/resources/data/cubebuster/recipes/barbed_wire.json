@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    { "item": "minecraft:string" },
+    { "item": "minecraft:string" },
+    { "item": "cubebuster:thorns" },
+    { "item": "cubebuster:thorns" }
+  ],
+  "result": {
+    "id": "cubebuster:barbed_wire",
+    "count": 3
+  }
+}

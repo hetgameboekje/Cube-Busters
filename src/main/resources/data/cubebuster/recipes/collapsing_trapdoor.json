@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    { "item": "minecraft:stick" },
+    { "item": "minecraft:stick" },
+    { "item": "minecraft:stick" },
+    { "item": "minecraft:stick" },
+    { "item": "cubebuster:thorns" },
+    { "item": "cubebuster:thorns" }
+  ],
+  "result": {
+    "id": "cubebuster:collapsing_trapdoor",
+    "count": 1
+  }
+}

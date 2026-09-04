@@ -2,6 +2,7 @@ package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
 import dev.bergthaler.cubebuster.event.AggroState;
+import dev.bergthaler.cubebuster.event.HordeBossState;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -16,6 +17,13 @@ public final class ModAttachmentTypes {
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<AggroState>> AGGRO =
             ATTACHMENT_TYPES.register("aggro", () -> AttachmentType.builder(() -> AggroState.EMPTY)
                     .serialize(AggroState.CODEC)
+                    .build());
+
+    // Player-attached persistent Horde Boss daily-cap counter + post-boss cooldown - see HordeBossCapManager.
+    // Same reasoning as AGGRO above: must survive restarts, so it can't be an in-memory map.
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<HordeBossState>> HORDE_BOSS_CAP =
+            ATTACHMENT_TYPES.register("horde_boss_cap", () -> AttachmentType.builder(() -> HordeBossState.EMPTY)
+                    .serialize(HordeBossState.CODEC)
                     .build());
 
     private ModAttachmentTypes() {

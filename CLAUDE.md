@@ -44,10 +44,12 @@ src/main/java/dev/bergthaler/cubebuster/
   entity/ai/               custom Goal implementations
   event/                   spawning & combat @SubscribeEvent handlers
   registry/                DeferredRegister holders: blocks, items, entity types, creative tab
-  tags/                    ModBlockTags - block-break permission logic for protected glass
+  tags/                    ModBlockTags - block-break permission logic for protected glass,
+                           plus the cubebuster:mush_blocks density tag used by Horde Boss
 src/main/resources/
   assets/cubebuster/   textures, models, blockstates, lang
-  data/cubebuster/     recipes, loot tables, biome modifiers (neoforge spawn placements)
+  data/cubebuster/     recipes, loot tables, biome modifiers (neoforge spawn placements),
+                       block tags (mush_blocks - currently a placeholder, see Horde Boss above)
   data/zombiemechanics/       datapack-editable block tags (breakable/unbreakable/protected_tierN)
 ```
 
@@ -122,8 +124,8 @@ redstone signal at its position (polled in `aiStep()`, no block entity
 needed). Ammo is a single `SynchedEntityData` `ItemStack` slot loaded/
 withdrawn by right-click (mirrors item frames); `performRangedAttack`
 switches projectile type on whatever's loaded — firework rocket, fire
-charge, or a fallback `Arrow` (used for the placeholder `THORN_AMMO` item
-too, see follow-up below).
+charge, or a fallback `Arrow` (used for `ModItems.THORNS`, from the Cactus
+Economy chain below, and anything else not specifically handled).
 
 Two crafting recipes (`data/cubebuster/recipe/turret.json` and
 `turret_sentry.json`): iron + dispenser + crossbow + `minecraft:oak_stairs`
@@ -131,12 +133,115 @@ as a placeholder "seat" ingredient (no seat item exists in this codebase),
 the sentry variant adds an eye of ender and starts active instead of
 needing the manual toggle.
 
-**Known follow-up:** `ModItems.THORN_AMMO` is a placeholder plain `Item` —
-once the Cactus Economy branch's real thorns item lands, swap
-`Turret#isValidAmmo`/`performRangedAttack` over to it and delete the
-placeholder. See `newmechanics.md`'s Turret section for the full
-sub-item-by-sub-item status and design notes (including that this was
-built and compiles clean but not verified in a running client/server).
+See `newmechanics.md`'s Turret section for the full sub-item-by-sub-item
+status and design notes (including that this was built and compiles clean
+but not verified in a running client/server).
+
+## Currently shipped: Mush / Infected mechanic
+
+Net-new system (doesn't touch existing zombie variants). `entity/InfectedCreeper.java`
+is a Creeper that never deals blast damage or breaks blocks — its explosion
+is neutralized in `event/InfectedCreeperHandler.java` (an
+`ExplosionEvent.Detonate` listener, since vanilla's `explodeCreeper()` is
+private and can't be overridden), which instead applies the custom
+`mush_infection` MobEffect (`effect/MushInfectionMobEffect.java`,
+`registry/ModMobEffects.java`) to anyone caught in the blast and seeds
+`block/MushBlock.java` spores nearby. MushBlock extends vanilla
+`SnowLayerBlock` (reuses its 1-8 layer/partial-height collision) and
+random-ticks itself thicker, then either climbs onto the block above
+(vine-like) or spreads onto neighboring grass/sand/gravel/stone once fully
+thickened. `entity/MushZombie.java` / `entity/MushSkeleton.java` are
+weaker natural variants (lower max HP, and MushZombie mines slower via a
+new `SlowMiningMob` interface hook in `BlockBreakingGoal`).
+
+The cure chain: harvesting MushBlock (see its loot table) yields a Mush
+Ball (hoe), the MushBlock itself back (shovel/shears), or an Infection
+Potion (anything else) — `item/InfectionPotionItem.java` and
+`item/AntibioticFireworkItem.java` are both plain custom `Item`s with
+their own use logic, **not** brewing-stand potions (no-alcohol constraint).
+`item/MortarAndPestleItem.java` is a hand tool, not a crafting-grid
+ingredient — grinding (Mush Ball → Antibiotic Paste, plus unrelated
+cobblestone→gravel/gravel→sand/dirt→sand/sand→Dust/cactus→dye utility
+conversions) happens via right-click (`useOn` for world blocks, `use` for
+a held item in the other hand), specifically to avoid needing
+`Item#getCraftingRemainingItem()` (which is `final` in vanilla and can't
+cleanly self-reference). Antibiotic Paste is then assembled into an
+Antibiotic Firework via an ordinary crafting recipe.
+
+## Currently shipped: Cactus Economy & Cactus/Pumpkin Golem
+
+Early-game defensive/utility blocks and a cactus sap → juice → mocktail
+crafting chain (net-new, no dependency on other systems), plus a melee
+utility golem that consumes the chain's thorns as its repair material.
+
+- **Blocks**: `BarbedWireBlock`, `ThornedBushBlock`,
+  `CollapsingTrapdoorBlock` (all in `block/`) — cobweb-shaped
+  slow+damage hazard, a non-solid cactus-analog bush, and a trapdoor that
+  springs open a short delay after something steps on it and
+  auto-recloses (a reusable trap, not a one-shot break).
+- **Chain**: shearing a cactus (`event/CactusShearHandler.java`) yields
+  thorns + shaved cactus; shaved cactus branches into cactus planks (+
+  any planks) or sap; 3 sap → juice; juice + ash (smelted from rotten
+  flesh) at a brewing stand → mocktail
+  (`event/ModBrewingRecipes.java`, a `RegisterBrewingRecipesEvent` hook).
+  No alcohol-themed items or flavor text anywhere in this chain (explicit
+  project rule).
+- **Cactus/Pumpkin Golem** (`entity/CactusGolem.java`): extends vanilla
+  `IronGolem`, but `registerGoals()` fully replaces its village-defense
+  goals with a plain wander/look/melee set targeting `Zombie` and its
+  subclasses only (Husks, Drowned, every cubebuster zombie variant) —
+  never players. Reuses vanilla's `IronGolemRenderer`/model wholesale
+  rather than bespoke art (a placeholder worth revisiting).
+- **Cactus limb + Looting transfer**: right-clicking the golem with a
+  `cactus_limb` item attaches it to the golem's MAINHAND equipment slot.
+  Vanilla's own Looting enchantment effect is hard-gated to player
+  attackers (`data/minecraft/enchantment/looting.json`'s
+  `entity_properties: player` requirement), so `CactusLimbHandler`
+  implements the transfer itself: on `LivingDropsEvent`, it reads the
+  limb's Looting level and duplicates drops with a per-level chance
+  (an approximation of vanilla's reroll, not identical to it).
+- **Elytra-style degradation**: `CactusLimbHandler` sets the limb's
+  damage value directly on every golem hit rather than calling
+  `ItemStack#hurtAndBreak`, so it never vanishes/breaks at max damage —
+  it just stops granting Looting once maxed out.
+- **Repair**: Mending works via the `enchantable/durability` item tag;
+  anvil repair with thorns is fixed at 1 XP level via a custom
+  `AnvilUpdateEvent` handler in `CactusLimbHandler`, bypassing vanilla's
+  scaling repair cost.
+- All tunables (damage, slow, trap timing, sap/juice yields, golem
+  HP/damage, limb degrade rate, anvil repair cost) live in `Config.java`
+  under the "Cactus Economy" / "Cactus/Pumpkin Golem" sections.
+
+## Currently shipped: Horde Boss (integration layer)
+
+Recurring boss event, triggered per-player every `Config.hordeBossCheckIntervalTicks`
+by `event/HordeBossSpawnHandler.java`: (aggro score, read from `AggroManager.getScore` -
+this layer never writes to it) × (mush block density near the player) crossing
+`Config.hordeBossTriggerThreshold`, scaled by a 7-Days-to-Die-style day/night pacing
+curve (`event/HordeBossPacing.java`) and gated by the daily/cluster/server spawn caps
+and a post-boss cooldown (`event/HordeBossCapManager.java`). Spawns `entity/HordeBoss.java`
+(a bigger, tankier `Zombie` variant, same `ownerUUID` pattern as `SiegeZombie`/`Screamer`)
+via `OpenAirSpawner`, with loot at `data/cubebuster/loot_table/entities/horde_boss.json`.
+
+Density is a block-count scan: `ModBlockTags.MUSH_BLOCKS` (`cubebuster:mush_blocks`) is
+the tag `event/HordeBossDensity.java` counts within `Config.hordeBossDensityRadius`
+blocks of the player. It was built against a placeholder tag entry
+(`minecraft:brown_mushroom_block`) before the Mush/Infected mechanic merged; now that
+`block/MushBlock.java` exists, `data/cubebuster/tags/block/mush_blocks.json` tags
+`cubebuster:mush_block` instead.
+
+Two cap-tracking mechanisms, chosen per scope:
+- **Per-player daily count + cooldown** (`hordeBossPlayerDailyCap`, `hordeBossCooldownTicks`):
+  the same NeoForge data-attachment pattern as `AggroState`/`ModAttachmentTypes.AGGRO` -
+  see `event/HordeBossState.java` + `ModAttachmentTypes.HORDE_BOSS_CAP`.
+- **Server-wide daily count + Chebyshev chunk-distance clustering**
+  (`hordeBossServerDailyCap`, `hordeBossClusterCap`, `hordeBossClusterChunkRadius`):
+  vanilla `SavedData` on the Overworld, not an attachment - this state is genuinely
+  server-scoped rather than per-player. See `event/HordeBossSavedData.java`.
+
+Both roll over at the Minecraft day boundary, computed from the Overworld's total game
+time divided by 24000 (not `Level.getDayTime()`, which sleeping/commands can shift) -
+see `HordeBossCapManager.currentDay`.
 
 ## Known bugs (fixed)
 
@@ -170,32 +275,21 @@ existing codebase:
 - ~~**Aggro persistence rework**~~ — done, see "Currently shipped: Aggro
   system" above. Was the blocking prerequisite for the Horde Boss cap
   system below.
-- **Mush / Infected mechanic** — new creeper variant, spore/mush blocks,
-  mush zombies, cure-item crafting chain (mortar & pestle). Net-new
-  system, doesn't touch existing zombie variants directly.
-- **Horde Boss** — recurring boss event, triggered by (per-player aggro
-  score) × (mush block density near player). Integration layer only —
-  reads from Aggro and Mush systems, they don't call into each other or
-  into the boss.
-  - Daily cap: 3/player, 15/server hard ceiling.
-  - Chunk clustering (Chebyshev distance): ≤5 chunks = clustered group
-    cap of 9 total; ≥6 chunks = individual 3/player cap.
-  - Cap consumption is sticky to the player (survives leaving a cluster).
-  - Cannot reuse vanilla mobcap for the daily quota (snapshot vs.
-    persistent) — needs a custom per-player counter, reset at day
-    boundary. Vanilla's per-player density-check *pattern* is reusable
-    for the live clustering calculation only.
-  - All thresholds config-adjustable, following the existing
-    `Config.java` pattern.
+- ~~**Mush / Infected mechanic**~~ — done, see "Currently shipped: Mush /
+  Infected mechanic" above.
+- ~~**Horde Boss**~~ — done, see "Currently shipped: Horde Boss
+  (integration layer)" above. Density check method (block-count scan) and
+  the post-boss cooldown were both left open in the original design and
+  have since been decided — see `NEW_MECHANICS.md`. Now scans the real
+  `cubebuster:mush_block` tag rather than the placeholder it was built
+  against, since Mush/Infected has since merged.
 - ~~**Turret**~~ — done (MVP), see "Currently shipped: Turret" above.
   Entity-based, reuses vanilla `RangedAttackGoal` +
-  `NearestAttackableTargetGoal` unmodified. Thorn ammo is still a
-  placeholder item pending the Cactus Economy branch merging.
-- **Cactus economy** — early-game survival items (barbed wire, thorned
-  bush, collapsing trapdoor) and a cactus sap → juice → mocktail crafting
-  chain. Net-new, no dependency on existing systems.
-- **Cactus/Pumpkin Golem** — new mob, elytra-style durability item with
-  Looting-enchant transfer. Net-new.
+  `NearestAttackableTargetGoal` unmodified. Now wired to the real
+  `ModItems.THORNS` item from the Cactus Economy work below (no more
+  placeholder ammo item).
+- ~~**Cactus economy**~~ / ~~**Cactus/Pumpkin Golem**~~ — done, see
+  "Currently shipped: Cactus Economy & Cactus/Pumpkin Golem" above.
 - **Custom structures** — mineshafts/sieged villages/bunkers as
   SiegeZombie/mush spawn points. Concept only, not designed in detail yet.
 

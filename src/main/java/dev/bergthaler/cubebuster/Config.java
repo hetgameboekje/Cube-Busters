@@ -285,8 +285,202 @@ public class Config {
             .defineInRange("turretMaxHealth", 20.0, 1.0, 200.0);
 
     private static final ModConfigSpec.DoubleValue TURRET_THORN_DAMAGE = BUILDER
-            .comment("Base damage dealt by a Turret's shot when loaded with thorn ammo (the arrow-analog placeholder - see ModItems.THORN_AMMO). Fireworks/fire charges deal their own vanilla damage instead.")
+            .comment("Base damage dealt by a Turret's shot when loaded with thorns (see ModItems.THORNS) or any other arrow-analog ammo. Fireworks/fire charges deal their own vanilla damage instead.")
             .defineInRange("turretThornDamage", 4.0, 0.0, 50.0);
+
+    // --- Mush / Infected mechanic ---
+    // InfectedCreepers deal no explosion damage; instead they infect anything caught in the blast with the
+    // mush infection effect and spread MushBlock spores onto nearby ground. MushBlocks spread on their own
+    // over time (thickening, then climbing/creeping like vines) until cleared. MushZombie/MushSkeleton are
+    // weaker natural variants (lower HP; zombies mine slower) that can spawn once mush is established.
+
+    private static final ModConfigSpec.DoubleValue INFECTED_CREEPER_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Creeper spawn attempt becomes an InfectedCreeper instead.")
+            .defineInRange("infectedCreeperSpawnChance", 0.1, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue INFECTED_CREEPER_SPORE_RADIUS = BUILDER
+            .comment("Radius (blocks) around an InfectedCreeper's blast within which it spreads mush spores onto grass/sand/gravel/stone.")
+            .defineInRange("infectedCreeperSporeRadius", 3, 1, 16);
+
+    private static final ModConfigSpec.DoubleValue INFECTED_CREEPER_SPORE_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per qualifying block within infectedCreeperSporeRadius, that an InfectedCreeper blast places a mush spore there.")
+            .defineInRange("infectedCreeperSporeChance", 0.35, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue INFECTION_EFFECT_DURATION_TICKS = BUILDER
+            .comment("Duration (ticks, 20 = 1 second) of the mush infection effect applied to players caught in an InfectedCreeper blast, or who drink an Infection Potion.")
+            .defineInRange("infectionEffectDurationTicks", 20 * 45, 20, 20 * 60 * 20);
+
+    private static final ModConfigSpec.IntValue INFECTION_EFFECT_AMPLIFIER = BUILDER
+            .comment("Amplifier of the mush infection effect (0 = level I). Higher damages more often - see the effect's own tick logic.")
+            .defineInRange("infectionEffectAmplifier", 0, 0, 4);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_THICKEN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick, that a MushBlock below max thickness (8 layers, like a snow layer) grows one layer thicker.")
+            .defineInRange("mushBlockThickenChance", 0.3, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_VERTICAL_GROW_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick on a fully-thickened MushBlock, that it climbs upward onto the block above (vine-like vertical spread) if that space is free.")
+            .defineInRange("mushBlockVerticalGrowChance", 0.15, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_HORIZONTAL_SPREAD_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick on a fully-thickened MushBlock, that it spreads sideways onto a neighboring qualifying block (grass/sand/gravel/stone).")
+            .defineInRange("mushBlockHorizontalSpreadChance", 0.05, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_MOB_HEALTH_MULTIPLIER = BUILDER
+            .comment("Max health multiplier applied to MushZombie/MushSkeleton relative to their non-mush counterpart (e.g. 0.6 = 40% less HP).")
+            .defineInRange("mushMobHealthMultiplier", 0.6, 0.1, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_ZOMBIE_MINING_SLOWDOWN_MULTIPLIER = BUILDER
+            .comment("Block-break time multiplier applied to MushZombie on top of the normal block-break duration (e.g. 1.8 = 80% slower to mine than a plain block-breaking zombie).")
+            .defineInRange("mushZombieMiningSlowdownMultiplier", 1.8, 1.0, 10.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_ZOMBIE_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Zombie spawn attempt becomes a MushZombie instead.")
+            .defineInRange("mushZombieSpawnChance", 0.08, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_SKELETON_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Skeleton spawn attempt becomes a MushSkeleton instead.")
+            .defineInRange("mushSkeletonSpawnChance", 0.08, 0.0, 1.0);
+
+    // Mush Ball (hoe) / Mush Block (shovel or shears) / Infection Potion (anything else, 25% chance) harvest
+    // outcomes for MushBlock live in its loot table (data/cubebuster/loot_table/blocks/mush_block.json), not
+    // here - loot tables are themselves the existing "data-driven, admin-editable" mechanism for drop tables in
+    // this mod (see the protected-glass loot tables), so there's no separate Config knob duplicating them.
+
+    private static final ModConfigSpec.IntValue ANTIBIOTIC_FIREWORK_CURE_REGEN_DURATION_TICKS = BUILDER
+            .comment("Duration (ticks, 20 = 1 second) of the Regeneration burst granted when an Antibiotic Firework cures the mush infection effect.")
+            .defineInRange("antibioticFireworkCureRegenDurationTicks", 20 * 5, 0, 20 * 60);
+
+    private static final ModConfigSpec.IntValue ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER = BUILDER
+            .comment("Regeneration amplifier granted when an Antibiotic Firework cures the mush infection effect (0 = level I).")
+            .defineInRange("antibioticFireworkCureRegenAmplifier", 1, 0, 4);
+
+    // --- Cactus Economy ---
+    // Early-game defensive/utility blocks and the cactus -> sap -> juice -> mocktail crafting chain. See
+    // README/CLAUDE.md "Cactus Economy" for the full recipe chain; this is only the runtime tunables (damage,
+    // slow, trap timing, processing yields).
+
+    private static final ModConfigSpec.DoubleValue BARBED_WIRE_DAMAGE = BUILDER
+            .comment("Damage dealt per tick to entities standing inside barbed wire.")
+            .defineInRange("barbedWireDamage", 1.0, 0.0, 20.0);
+
+    private static final ModConfigSpec.DoubleValue BARBED_WIRE_SLOW_MULTIPLIER = BUILDER
+            .comment("Movement speed multiplier applied to entities while inside barbed wire (lower = slower, matches vanilla cobweb-style movement friction).")
+            .defineInRange("barbedWireSlowMultiplier", 0.4, 0.05, 1.0);
+
+    private static final ModConfigSpec.DoubleValue THORNED_BUSH_DAMAGE = BUILDER
+            .comment("Damage dealt per tick to entities touching a thorned bush (a plantable, cactus-like hazard bush).")
+            .defineInRange("thornedBushDamage", 1.0, 0.0, 20.0);
+
+    private static final ModConfigSpec.IntValue COLLAPSING_TRAPDOOR_DELAY_TICKS = BUILDER
+            .comment("How long (ticks, 20 = 1 second) after an entity steps onto a closed collapsing trapdoor before it springs open and drops them through.")
+            .defineInRange("collapsingTrapdoorDelayTicks", 20, 1, 20 * 60);
+
+    private static final ModConfigSpec.IntValue COLLAPSING_TRAPDOOR_RECLOSE_TICKS = BUILDER
+            .comment("How long (ticks, 20 = 1 second) a collapsing trapdoor stays open after springing before it automatically re-closes and resets itself as a trap.")
+            .defineInRange("collapsingTrapdoorRecloseTicks", 40, 1, 20 * 60);
+
+    private static final ModConfigSpec.IntValue CACTUS_TO_SAP = BUILDER
+            .comment("How many sap items one cactus (or one shaved cactus) processes into.")
+            .defineInRange("cactusToSap", 1, 1, 16);
+
+    private static final ModConfigSpec.IntValue SAP_TO_JUICE = BUILDER
+            .comment("How much sap is required to make one cactus juice.")
+            .defineInRange("sapToJuice", 3, 1, 16);
+
+    // --- Cactus/Pumpkin Golem ---
+    // A melee-only IronGolem-style utility mob that targets zombie-family mobs (never players). Optionally
+    // carries one cactus-limb item, which transfers its Looting enchant level to the golem's kills. The limb
+    // degrades (elytra-style: never vanishes at 0 durability, just stops functioning) and repairs via Mending or
+    // an anvil using thorns, always at a fixed XP cost rather than vanilla's scaling repair cost.
+
+    private static final ModConfigSpec.DoubleValue CACTUS_GOLEM_MAX_HEALTH = BUILDER
+            .comment("Max health of the Cactus/Pumpkin Golem.")
+            .defineInRange("cactusGolemMaxHealth", 50.0, 1.0, 2000.0);
+
+    private static final ModConfigSpec.DoubleValue CACTUS_GOLEM_ATTACK_DAMAGE = BUILDER
+            .comment("Melee attack damage of the Cactus/Pumpkin Golem.")
+            .defineInRange("cactusGolemAttackDamage", 8.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.IntValue CACTUS_GOLEM_LIMB_DAMAGE_PER_HIT = BUILDER
+            .comment("Durability points a carried cactus-limb item loses each time the golem lands a hit.")
+            .defineInRange("cactusGolemLimbDamagePerHit", 1, 0, 100);
+
+    private static final ModConfigSpec.IntValue CACTUS_GOLEM_ANVIL_REPAIR_COST_LEVELS = BUILDER
+            .comment("Fixed XP level cost to repair a cactus-limb item with thorns at an anvil, regardless of how damaged it is (overrides vanilla's scaling repair cost).")
+            .defineInRange("cactusGolemAnvilRepairCostLevels", 1, 0, 39);
+
+    // --- Horde Boss (integration layer) ---
+    // Recurring boss event triggered by (per-player aggro score) x (mush block density near the player). Purely
+    // an integration layer: reads AggroManager's score and scans for ModBlockTags.MUSH_BLOCKS, doesn't modify
+    // either system. See event/HordeBossCapManager, event/HordeBossDensity, event/HordeBossPacing,
+    // event/HordeBossSpawnHandler for the pieces this config drives.
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_DENSITY_RADIUS = BUILDER
+            .comment("Radius (blocks) around a player that the Horde Boss trigger scans for mush blocks (ModBlockTags.MUSH_BLOCKS).",
+                    "Density is measured as a simple count of tagged blocks within this radius - the simplest method to implement and tune, chosen over a % ground-coverage calculation.")
+            .defineInRange("hordeBossDensityRadius", 16, 1, 64);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_TRIGGER_THRESHOLD = BUILDER
+            .comment("Trigger threshold for (player aggro score) x (mush blocks counted within hordeBossDensityRadius). Once a player's product crosses this, each hordeBossCheckIntervalTicks roll has a hordeBossBaseTriggerChance (scaled by day/night pacing) shot at spawning a boss for them.",
+                    "With defaults (aggro maxes at 600, a heavily mushed area might have a few hundred tagged blocks in range), this is meant to require both a genuinely aggravated player AND a genuinely infested area - neither alone should be enough.")
+            .defineInRange("hordeBossTriggerThreshold", 6000, 1, 10_000_000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CHECK_INTERVAL_TICKS = BUILDER
+            .comment("How often (ticks, 20 = 1 second) each player is checked for a Horde Boss trigger roll.")
+            .defineInRange("hordeBossCheckIntervalTicks", 1200, 20, 20 * 60 * 60);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_BASE_TRIGGER_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) per hordeBossCheckIntervalTicks roll that a player whose aggro-x-density product is over the threshold actually spawns a boss, before day/night pacing scales it down.")
+            .defineInRange("hordeBossBaseTriggerChance", 0.15, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_DAY_PACING_MULTIPLIER = BUILDER
+            .comment("Trigger-chance multiplier during full daylight (7 Days to Die-style pacing: minimal buildup by day, ramping up toward night). 0.05 means daytime rolls succeed at 5% of their nighttime rate.")
+            .defineInRange("hordeBossDayPacingMultiplier", 0.05, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_PACING_RAMP_TICKS = BUILDER
+            .comment("Width (ticks, 20 = 1 second) of the dusk/dawn transition window the pacing multiplier ramps linearly across, centered on vanilla's day/night boundaries. ~500 ticks (25s) matches the 7 Days to Die-style buildup this is modeled on.")
+            .defineInRange("hordeBossPacingRampTicks", 500, 20, 12000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_COOLDOWN_TICKS = BUILDER
+            .comment("Per-player cooldown (ticks, 20 = 1 second) after a Horde Boss spawns for them, before another can trigger for them - independent of day/night pacing, which alone doesn't prevent an immediate re-trigger right after a boss fight ends. Default is half a Minecraft day.")
+            .defineInRange("hordeBossCooldownTicks", 12000, 0, 20 * 60 * 60 * 24);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_PLAYER_DAILY_CAP = BUILDER
+            .comment("Maximum Horde Boss spawns attributed to a single player per Minecraft day (see hordeBossClusterCap for what happens when multiple players are clustered together).")
+            .defineInRange("hordeBossPlayerDailyCap", 3, 1, 1000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CLUSTER_CAP = BUILDER
+            .comment("When 2+ players triggering Horde Boss spawns are within hordeBossClusterChunkRadius chunks of each other (Chebyshev distance), their spawns share this combined cap instead of each getting their own hordeBossPlayerDailyCap independently. Each player's own hordeBossPlayerDailyCap still applies on top, so this mainly matters once 4+ players cluster together.")
+            .defineInRange("hordeBossClusterCap", 9, 1, 1000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CLUSTER_CHUNK_RADIUS = BUILDER
+            .comment("Chebyshev chunk-distance cutoff for clustering: spawn attempts <= this many chunks apart share the clustered group cap (hordeBossClusterCap); > this many chunks apart, each player uses their own individual cap (hordeBossPlayerDailyCap). No dead zone at the boundary - exactly this distance still counts as clustered.")
+            .defineInRange("hordeBossClusterChunkRadius", 5, 1, 64);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SERVER_DAILY_CAP = BUILDER
+            .comment("Hard ceiling on total Horde Boss spawns server-wide per Minecraft day, regardless of per-player or cluster caps. Whichever cap (this, the cluster cap, or the per-player cap) is hit first blocks further spawns.")
+            .defineInRange("hordeBossServerDailyCap", 15, 1, 10000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SPAWN_SAFE_ZONE_RADIUS = BUILDER
+            .comment("Radius (blocks) around the triggering player within which a Horde Boss spawn attempt never places the boss.")
+            .defineInRange("hordeBossSpawnSafeZoneRadius", 16, 0, 128);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SPAWN_MAX_RADIUS = BUILDER
+            .comment("Maximum radius (blocks) around the triggering player that a Horde Boss spawn attempt searches for a spot in.")
+            .defineInRange("hordeBossSpawnMaxRadius", 40, 1, 256);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_MAX_HEALTH = BUILDER
+            .comment("Horde Boss max health (vanilla zombie is 20).")
+            .defineInRange("hordeBossMaxHealth", 150.0, 1.0, 10000.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_ATTACK_DAMAGE = BUILDER
+            .comment("Horde Boss melee attack damage (vanilla zombie is 3).")
+            .defineInRange("hordeBossAttackDamage", 12.0, 0.0, 1000.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_MOVEMENT_SPEED = BUILDER
+            .comment("Horde Boss movement speed attribute (vanilla zombie is 0.23).")
+            .defineInRange("hordeBossMovementSpeed", 0.26, 0.01, 5.0);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -352,6 +546,47 @@ public class Config {
     public static int turretAttackIntervalTicks;
     public static double turretMaxHealth;
     public static double turretThornDamage;
+    public static double infectedCreeperSpawnChance;
+    public static int infectedCreeperSporeRadius;
+    public static double infectedCreeperSporeChance;
+    public static int infectionEffectDurationTicks;
+    public static int infectionEffectAmplifier;
+    public static double mushBlockThickenChance;
+    public static double mushBlockVerticalGrowChance;
+    public static double mushBlockHorizontalSpreadChance;
+    public static double mushMobHealthMultiplier;
+    public static double mushZombieMiningSlowdownMultiplier;
+    public static double mushZombieSpawnChance;
+    public static double mushSkeletonSpawnChance;
+    public static int antibioticFireworkCureRegenDurationTicks;
+    public static int antibioticFireworkCureRegenAmplifier;
+    public static double barbedWireDamage;
+    public static double barbedWireSlowMultiplier;
+    public static double thornedBushDamage;
+    public static int collapsingTrapdoorDelayTicks;
+    public static int collapsingTrapdoorRecloseTicks;
+    public static int cactusToSap;
+    public static int sapToJuice;
+    public static double cactusGolemMaxHealth;
+    public static double cactusGolemAttackDamage;
+    public static int cactusGolemLimbDamagePerHit;
+    public static int cactusGolemAnvilRepairCostLevels;
+    public static int hordeBossDensityRadius;
+    public static int hordeBossTriggerThreshold;
+    public static int hordeBossCheckIntervalTicks;
+    public static double hordeBossBaseTriggerChance;
+    public static double hordeBossDayPacingMultiplier;
+    public static int hordeBossPacingRampTicks;
+    public static int hordeBossCooldownTicks;
+    public static int hordeBossPlayerDailyCap;
+    public static int hordeBossClusterCap;
+    public static int hordeBossClusterChunkRadius;
+    public static int hordeBossServerDailyCap;
+    public static int hordeBossSpawnSafeZoneRadius;
+    public static int hordeBossSpawnMaxRadius;
+    public static double hordeBossMaxHealth;
+    public static double hordeBossAttackDamage;
+    public static double hordeBossMovementSpeed;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -444,5 +679,47 @@ public class Config {
         turretAttackIntervalTicks = TURRET_ATTACK_INTERVAL_TICKS.get();
         turretMaxHealth = TURRET_MAX_HEALTH.get();
         turretThornDamage = TURRET_THORN_DAMAGE.get();
+        infectedCreeperSpawnChance = INFECTED_CREEPER_SPAWN_CHANCE.get();
+        infectedCreeperSporeRadius = INFECTED_CREEPER_SPORE_RADIUS.get();
+        infectedCreeperSporeChance = INFECTED_CREEPER_SPORE_CHANCE.get();
+        infectionEffectDurationTicks = INFECTION_EFFECT_DURATION_TICKS.get();
+        infectionEffectAmplifier = INFECTION_EFFECT_AMPLIFIER.get();
+        mushBlockThickenChance = MUSH_BLOCK_THICKEN_CHANCE.get();
+        mushBlockVerticalGrowChance = MUSH_BLOCK_VERTICAL_GROW_CHANCE.get();
+        mushBlockHorizontalSpreadChance = MUSH_BLOCK_HORIZONTAL_SPREAD_CHANCE.get();
+        mushMobHealthMultiplier = MUSH_MOB_HEALTH_MULTIPLIER.get();
+        mushZombieMiningSlowdownMultiplier = MUSH_ZOMBIE_MINING_SLOWDOWN_MULTIPLIER.get();
+        mushZombieSpawnChance = MUSH_ZOMBIE_SPAWN_CHANCE.get();
+        mushSkeletonSpawnChance = MUSH_SKELETON_SPAWN_CHANCE.get();
+        antibioticFireworkCureRegenDurationTicks = ANTIBIOTIC_FIREWORK_CURE_REGEN_DURATION_TICKS.get();
+        antibioticFireworkCureRegenAmplifier = ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER.get();
+        barbedWireDamage = BARBED_WIRE_DAMAGE.get();
+        barbedWireSlowMultiplier = BARBED_WIRE_SLOW_MULTIPLIER.get();
+        thornedBushDamage = THORNED_BUSH_DAMAGE.get();
+        collapsingTrapdoorDelayTicks = COLLAPSING_TRAPDOOR_DELAY_TICKS.get();
+        collapsingTrapdoorRecloseTicks = COLLAPSING_TRAPDOOR_RECLOSE_TICKS.get();
+        cactusToSap = CACTUS_TO_SAP.get();
+        sapToJuice = SAP_TO_JUICE.get();
+
+        cactusGolemMaxHealth = CACTUS_GOLEM_MAX_HEALTH.get();
+        cactusGolemAttackDamage = CACTUS_GOLEM_ATTACK_DAMAGE.get();
+        cactusGolemLimbDamagePerHit = CACTUS_GOLEM_LIMB_DAMAGE_PER_HIT.get();
+        cactusGolemAnvilRepairCostLevels = CACTUS_GOLEM_ANVIL_REPAIR_COST_LEVELS.get();
+        hordeBossDensityRadius = HORDE_BOSS_DENSITY_RADIUS.get();
+        hordeBossTriggerThreshold = HORDE_BOSS_TRIGGER_THRESHOLD.get();
+        hordeBossCheckIntervalTicks = HORDE_BOSS_CHECK_INTERVAL_TICKS.get();
+        hordeBossBaseTriggerChance = HORDE_BOSS_BASE_TRIGGER_CHANCE.get();
+        hordeBossDayPacingMultiplier = HORDE_BOSS_DAY_PACING_MULTIPLIER.get();
+        hordeBossPacingRampTicks = HORDE_BOSS_PACING_RAMP_TICKS.get();
+        hordeBossCooldownTicks = HORDE_BOSS_COOLDOWN_TICKS.get();
+        hordeBossPlayerDailyCap = HORDE_BOSS_PLAYER_DAILY_CAP.get();
+        hordeBossClusterCap = HORDE_BOSS_CLUSTER_CAP.get();
+        hordeBossClusterChunkRadius = HORDE_BOSS_CLUSTER_CHUNK_RADIUS.get();
+        hordeBossServerDailyCap = HORDE_BOSS_SERVER_DAILY_CAP.get();
+        hordeBossSpawnSafeZoneRadius = HORDE_BOSS_SPAWN_SAFE_ZONE_RADIUS.get();
+        hordeBossSpawnMaxRadius = HORDE_BOSS_SPAWN_MAX_RADIUS.get();
+        hordeBossMaxHealth = HORDE_BOSS_MAX_HEALTH.get();
+        hordeBossAttackDamage = HORDE_BOSS_ATTACK_DAMAGE.get();
+        hordeBossMovementSpeed = HORDE_BOSS_MOVEMENT_SPEED.get();
     }
 }

@@ -4,6 +4,10 @@ import com.mojang.logging.LogUtils;
 import dev.bergthaler.cubebuster.client.BlueZombieRenderer;
 import dev.bergthaler.cubebuster.client.EnderZombieRenderer;
 import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
+import dev.bergthaler.cubebuster.client.InfectedCreeperRenderer;
+import dev.bergthaler.cubebuster.client.MushSkeletonRenderer;
+import dev.bergthaler.cubebuster.client.MushZombieRenderer;
+import dev.bergthaler.cubebuster.client.HordeBossRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
@@ -13,8 +17,10 @@ import dev.bergthaler.cubebuster.registry.ModBlocks;
 import dev.bergthaler.cubebuster.registry.ModCreativeModeTabs;
 import dev.bergthaler.cubebuster.registry.ModEntityTypes;
 import dev.bergthaler.cubebuster.registry.ModItems;
+import dev.bergthaler.cubebuster.registry.ModMobEffects;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -44,6 +50,7 @@ public class Cubebuster {
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
         ModCreativeModeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
+        ModMobEffects.MOB_EFFECTS.register(modEventBus);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -73,6 +80,13 @@ public class Cubebuster {
             event.registerEntityRenderer(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SCREAMER.get(), ScreamerRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.TURRET.get(), TurretRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.INFECTED_CREEPER.get(), InfectedCreeperRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.MUSH_ZOMBIE.get(), MushZombieRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.MUSH_SKELETON.get(), MushSkeletonRenderer::new);
+            // Reuses vanilla's IronGolemRenderer wholesale (CactusGolem extends IronGolem) rather than a bespoke
+            // model/texture - functional placeholder, see CLAUDE.md for the follow-up note on custom art.
+            event.registerEntityRenderer(ModEntityTypes.CACTUS_GOLEM.get(), IronGolemRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HORDE_BOSS.get(), HordeBossRenderer::new);
         }
 
         @SubscribeEvent
@@ -87,6 +101,9 @@ public class Cubebuster {
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T1.get(), RenderType.cutout());
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T2.get(), RenderType.cutout());
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T3.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.BARBED_WIRE.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.THORNED_BUSH.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.COLLAPSING_TRAPDOOR.get(), RenderType.cutout());
             });
         }
     }
