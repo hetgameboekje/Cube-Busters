@@ -123,13 +123,159 @@ Tracks design status per mechanic discussed for Cube Busters. Status legend:
 ---
 
 ## Custom Structures
-**Status: ⬜ Not started**
+**Status: 🟡 Partially decided**
+
+Design proposal below covers the first structure to build (Bunker), the
+second in line (Sieged Village), and defers Mineshaft. Nothing is
+implemented yet — this is the design writeup requested to unblock
+implementation, no structure JSON/NBT/Java has been written.
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Structure types (mineshafts, sieged villages, bunkers) | ⬜ | Named as concepts only |
-| Spawn conditions | ⬜ | Not defined |
-| Loot tables | ⬜ | Not defined |
+| Which structure(s) first | ✅ | Bunker first, Sieged Village second, Mineshaft deferred — see reasoning below |
+| Generation approach | ✅ | Hand-placed NBT + `structure_set` for Bunker; jigsaw injection into vanilla village pools for Sieged Village |
+| Spawn/placement conditions | 🟡 | Approach decided (structure_set spacing/separation + biome tags); concrete numeric values (spacing, separation, biome list) not chosen |
+| SiegeZombie/mush tie-in | ✅ | Baked-in `minecraft:mob_spawner` block entities in the structure template, mirroring vanilla dungeons — deliberately *not* routed through `AggroSpawnHandler`/`AggroManager` (see reasoning below) |
+| Loot table shape | ✅ | `minecraft:chest`-type loot table, multi-pool, referencing existing items (Siege Pickaxe, etc.) |
+| Effort estimate | ✅ | See below |
+
+### Why Bunker first, Sieged Village second, Mineshaft deferred
+
+- **Bunker** — a small, fully hand-authored room/pod (player-built-lore
+  "survivor bunker"). It's a single self-contained structure NBT with no
+  dependency on vanilla structure internals, so it's the cheapest way to
+  prove out the whole pipeline (structure NBT authoring → `structure_set`
+  placement → spawner block → loot table → in-game test loop) before
+  investing in anything more complex. **Build this first.**
+- **Sieged Village** — reuses vanilla's existing village jigsaw pools
+  rather than building a village from scratch: inject a new "siege camp"
+  jigsaw piece (barricades, a SiegeZombie spawner, broken carts) into the
+  vanilla `village/plains/houses`-style pools via a data pack addition, so
+  it naturally appears as a variant encounter across existing village
+  biome variants. Higher payoff (ties directly into the existing siege
+  theme, feels native to normal village exploration) but meaningfully more
+  work than Bunker because it means composing with vanilla's jigsaw pool
+  system across multiple village biome variants instead of a single fixed
+  NBT. **Build second**, once the Bunker pipeline is proven.
+- **Mineshaft** — deferred. Vanilla mineshafts are irregular *procedural*
+  corridor structures (`MineshaftPieces`), not template-pool/jigsaw driven
+  like villages — there's no equivalent "add a jigsaw piece" injection
+  point, so hooking in would mean either patching vanilla's generator code
+  (bad — invasive, brittle to updates) or growing a wholly separate custom
+  mineshaft generator from scratch (expensive, and the payoff — visually
+  differentiating it from vanilla mineshafts — is lower than Bunker or
+  Sieged Village). Revisit only after both other structures have shipped
+  and the team has jigsaw/structure-gen experience from Sieged Village.
+
+### Spawn / placement conditions
+
+Recommend the standard vanilla worldgen datapack shape, same layer the
+`neoforge/biome_modifier/*.json` files already sit in
+(`src/main/resources/data/cubebuster/`), extended with new folders:
+
+- `data/cubebuster/worldgen/structure/bunker.json` — the structure
+  definition (type `minecraft:jigsaw` with a single-piece pool for
+  Bunker, or `minecraft:structure` referencing a static NBT if the
+  simpler non-jigsaw structure type suffices — recommend starting with
+  the simpler static NBT structure type for Bunker since it's a single
+  fixed room, saving jigsaw complexity for Sieged Village where it's
+  actually needed).
+- `data/cubebuster/worldgen/structure_set/bunker.json` — placement:
+  spacing/separation (vanilla-style grid jitter) and a biome filter tag
+  (recommend restricting to overworld land biomes excluding oceans/rivers
+  to start, narrowing later once playtested). Exact spacing/separation
+  numbers are the one open sub-question — start conservative (rarer than
+  vanilla villages, denser than strongholds) and tune from playtesting
+  rather than guessing a final number now.
+- `data/cubebuster/worldgen/template_pool/` — only needed once Sieged
+  Village's jigsaw pieces exist; Bunker doesn't need this if it uses the
+  static-NBT structure type.
+- Biome restriction expressed the same way the existing
+  `neoforge/biome_modifier/*_zombie_spawns.json` files already do (biome
+  tag references), for consistency with the rest of the datapack.
+
+### How SiegeZombie/mush spawning ties in
+
+Recommend **baked-in spawner block entities inside the structure
+template** (a `minecraft:mob_spawner` block with `SpawnData` set to
+`cubebuster:siege_zombie`, same pattern vanilla dungeons/trial chambers
+use), not a code-driven trigger. Reasoning:
+
+- `AggroSpawnHandler`/`OpenAirSpawner` are built around a *live, timed,
+  per-player* loop — periodic checks against a player's current aggro
+  score, searching for open-air spots near wherever that specific player
+  currently is (see `AggroSpawnHandler.trySpawnFor`,
+  `OpenAirSpawner.trySpawnNear`). That model doesn't fit a static
+  structure sitting at a fixed world location that any player might find
+  at any aggro level (including zero) — a structure's spawner should fire
+  based on a player entering/breaking into the structure, not on their
+  aggro score.
+- A baked spawner block requires no new Java code at all — it's pure
+  worldgen data, consistent with the "config/data-driven, not hardcoded"
+  convention in `CLAUDE.md`, and it's the exact mechanism vanilla already
+  uses for "structure you break into has guards inside."
+- **Explicitly not reusing `SiegeZombieSpawner`/`BlueZombieSpawner`** — those
+  helpers implement the "spawn N mobs in the open air near a player"
+  pattern for the *force-spawn* systems, which is a different problem
+  (searching for a valid position near a moving player) than "place a
+  spawner block at a structure-author-chosen fixed position inside a
+  hand-built room." Reusing them here would add a dependency in the wrong
+  direction.
+- Optional future integration point (flagged, not decided): entering a
+  Bunker/Sieged Village could call into `AggroManager` to bump the
+  player's score, tying structure exploration into the aggro/Horde Boss
+  economy. This is a nice-to-have worth a follow-up design note once the
+  Horde Boss system (which this file already flags as blocked on the
+  Aggro persistence rework) is closer to landing — not required for a
+  first structure ship.
+- Mush blocks: for the first pass, place them **statically** in the
+  structure NBT (decorative pre-infested rooms) rather than wiring live
+  mush-spread logic at structure-generation time — the Mush mechanic's
+  spread behavior (see the "Mush / Infected Mechanic" section above) is
+  designed to run at tick-time on existing blocks, not at structure
+  placement time, so there's nothing structure-specific to build there
+  beyond authoring the template with mush blocks already present.
+
+### Loot table shape
+
+Follow the existing loot table pattern in
+`src/main/resources/data/cubebuster/loot_table/blocks/protected_glass_t1.json`
+(shown above — `type`, `pools`, `rolls`, `entries`) but using
+`"type": "minecraft:chest"` and multiple pools, the same way vanilla
+structure loot tables are laid out, under a new
+`data/cubebuster/loot_table/chests/` folder:
+
+- `loot_table/chests/bunker_stash.json` — pool 1: common survival loot
+  (food, basic tools, low-tier protected glass) at `rolls: 3-5`; pool 2:
+  rare loot (a chance at a Siege Pickaxe drop, referencing the existing
+  siege pickaxe item) at `rolls: 0-1` with a low weight/low quality roll,
+  matching the "drop-only, not craftable" design already decided for the
+  Siege Pickaxe in the Mob Variants section above.
+- `loot_table/chests/sieged_village_camp.json` — similar two-pool shape,
+  reusing the same common pool where reasonable, with village-raid-themed
+  rare loot (still TBD which specific items — flagged as an open item to
+  fill in once Bunker's loot table pattern is validated in-game).
+- The loot table is referenced from a chest block placed directly inside
+  the structure NBT/template (`LootTable` NBT tag on the chest block
+  entity), exactly how vanilla structures wire up their loot — no custom
+  Java loot-injection code needed.
+
+### Rough effort / scope estimate
+
+- **Bunker** (build first): small, roughly 1-2 focused implementation
+  sessions once the structure NBT is modeled/built-and-saved in a test
+  world — `structure_set` + `structure` JSON, one `mob_spawner` block, one
+  chest + loot table, biome/spacing tuning via playtesting. No jigsaw, no
+  vanilla pool interaction, minimal surface area for bugs.
+- **Sieged Village** (build second): noticeably larger — composing new
+  jigsaw pieces into vanilla's existing village template pools, testing
+  across each village biome variant (plains/desert/savanna/taiga/snowy),
+  making sure the injected piece doesn't break existing village jigsaw
+  connectivity. Budget meaningfully more time than Bunker; exact sizing
+  TBD until Bunker's pipeline surfaces how much friction the jigsaw
+  tooling actually has.
+- **Mineshaft**: not estimated — deferred, see reasoning above. Revisit
+  and re-scope only after Bunker and Sieged Village have shipped.
 
 ---
 
