@@ -4,6 +4,9 @@ import com.mojang.logging.LogUtils;
 import dev.bergthaler.cubebuster.client.BlueZombieRenderer;
 import dev.bergthaler.cubebuster.client.EnderZombieRenderer;
 import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
+import dev.bergthaler.cubebuster.client.InfectedCreeperRenderer;
+import dev.bergthaler.cubebuster.client.MushSkeletonRenderer;
+import dev.bergthaler.cubebuster.client.MushZombieRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
@@ -12,6 +15,7 @@ import dev.bergthaler.cubebuster.registry.ModBlocks;
 import dev.bergthaler.cubebuster.registry.ModCreativeModeTabs;
 import dev.bergthaler.cubebuster.registry.ModEntityTypes;
 import dev.bergthaler.cubebuster.registry.ModItems;
+import dev.bergthaler.cubebuster.registry.ModMobEffects;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.neoforged.api.distmarker.Dist;
@@ -43,6 +47,7 @@ public class Cubebuster {
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
         ModCreativeModeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
+        ModMobEffects.MOB_EFFECTS.register(modEventBus);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -71,6 +76,9 @@ public class Cubebuster {
             event.registerEntityRenderer(ModEntityTypes.RED_ZOMBIE.get(), RedZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SCREAMER.get(), ScreamerRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.INFECTED_CREEPER.get(), InfectedCreeperRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.MUSH_ZOMBIE.get(), MushZombieRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.MUSH_SKELETON.get(), MushSkeletonRenderer::new);
         }
 
         @SubscribeEvent

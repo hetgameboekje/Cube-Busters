@@ -149,6 +149,9 @@ public class BlockBreakingGoal extends Goal {
         if (NightBuffGoal.isActive(zombie)) {
             breakTicks = Math.max(1, (int) (breakTicks * Config.nightBlockBreakSpeedMultiplier));
         }
+        if (zombie instanceof SlowMiningMob slowMiner) {
+            breakTicks = Math.max(1, (int) (breakTicks * slowMiner.miningSlowdownMultiplier()));
+        }
 
         breakProgress++;
         int stage = Mth.clamp((int) ((float) breakProgress / breakTicks * 10.0F), 0, 9);

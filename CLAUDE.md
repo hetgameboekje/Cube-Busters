@@ -103,6 +103,37 @@ event is raised on.
 This was the blocking prerequisite for the Horde Boss cap system
 (see `NEW_MECHANICS.md`) — it's unblocked now.
 
+## Currently shipped: Mush / Infected mechanic
+
+Net-new system (doesn't touch existing zombie variants). `entity/InfectedCreeper.java`
+is a Creeper that never deals blast damage or breaks blocks — its explosion
+is neutralized in `event/InfectedCreeperHandler.java` (an
+`ExplosionEvent.Detonate` listener, since vanilla's `explodeCreeper()` is
+private and can't be overridden), which instead applies the custom
+`mush_infection` MobEffect (`effect/MushInfectionMobEffect.java`,
+`registry/ModMobEffects.java`) to anyone caught in the blast and seeds
+`block/MushBlock.java` spores nearby. MushBlock extends vanilla
+`SnowLayerBlock` (reuses its 1-8 layer/partial-height collision) and
+random-ticks itself thicker, then either climbs onto the block above
+(vine-like) or spreads onto neighboring grass/sand/gravel/stone once fully
+thickened. `entity/MushZombie.java` / `entity/MushSkeleton.java` are
+weaker natural variants (lower max HP, and MushZombie mines slower via a
+new `SlowMiningMob` interface hook in `BlockBreakingGoal`).
+
+The cure chain: harvesting MushBlock (see its loot table) yields a Mush
+Ball (hoe), the MushBlock itself back (shovel/shears), or an Infection
+Potion (anything else) — `item/InfectionPotionItem.java` and
+`item/AntibioticFireworkItem.java` are both plain custom `Item`s with
+their own use logic, **not** brewing-stand potions (no-alcohol constraint).
+`item/MortarAndPestleItem.java` is a hand tool, not a crafting-grid
+ingredient — grinding (Mush Ball → Antibiotic Paste, plus unrelated
+cobblestone→gravel/gravel→sand/dirt→sand/sand→Dust/cactus→dye utility
+conversions) happens via right-click (`useOn` for world blocks, `use` for
+a held item in the other hand), specifically to avoid needing
+`Item#getCraftingRemainingItem()` (which is `final` in vanilla and can't
+cleanly self-reference). Antibiotic Paste is then assembled into an
+Antibiotic Firework via an ordinary crafting recipe.
+
 ## Known bugs (fixed)
 
 ### 1. Aggro gain ignored creative/spectator mode — fixed
@@ -135,9 +166,8 @@ existing codebase:
 - ~~**Aggro persistence rework**~~ — done, see "Currently shipped: Aggro
   system" above. Was the blocking prerequisite for the Horde Boss cap
   system below.
-- **Mush / Infected mechanic** — new creeper variant, spore/mush blocks,
-  mush zombies, cure-item crafting chain (mortar & pestle). Net-new
-  system, doesn't touch existing zombie variants directly.
+- ~~**Mush / Infected mechanic**~~ — done, see "Currently shipped: Mush /
+  Infected mechanic" above.
 - **Horde Boss** — recurring boss event, triggered by (per-player aggro
   score) × (mush block density near player). Integration layer only —
   reads from Aggro and Mush systems, they don't call into each other or

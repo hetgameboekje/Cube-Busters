@@ -5,6 +5,9 @@ import dev.bergthaler.cubebuster.Cubebuster;
 import dev.bergthaler.cubebuster.entity.BlueZombie;
 import dev.bergthaler.cubebuster.entity.EnderZombie;
 import dev.bergthaler.cubebuster.entity.GreenZombie;
+import dev.bergthaler.cubebuster.entity.InfectedCreeper;
+import dev.bergthaler.cubebuster.entity.MushSkeleton;
+import dev.bergthaler.cubebuster.entity.MushZombie;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
@@ -40,6 +43,9 @@ public final class ModSetupEvents {
         event.put(ModEntityTypes.RED_ZOMBIE.get(), RedZombie.createAttributes().build());
         event.put(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombie.createAttributes().build());
         event.put(ModEntityTypes.SCREAMER.get(), Screamer.createAttributes().build());
+        event.put(ModEntityTypes.INFECTED_CREEPER.get(), InfectedCreeper.createAttributes().build());
+        event.put(ModEntityTypes.MUSH_ZOMBIE.get(), MushZombie.createAttributes().build());
+        event.put(ModEntityTypes.MUSH_SKELETON.get(), MushSkeleton.createAttributes().build());
     }
 
     @SubscribeEvent
@@ -146,6 +152,35 @@ public final class ModSetupEvents {
                     }
                     return false;
                 },
+                RegisterSpawnPlacementsEvent.Operation.OR
+        );
+
+        // Mush / Infected mechanic: each rolls independently against a normal Creeper/Zombie/Skeleton spawn
+        // attempt, same "replace some fraction of the vanilla mob's spawns" technique as the other variants.
+        event.register(
+                ModEntityTypes.INFECTED_CREEPER.get(),
+                SpawnPlacementTypes.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, spawnType, pos, random) -> Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random)
+                        && random.nextDouble() < Config.infectedCreeperSpawnChance,
+                RegisterSpawnPlacementsEvent.Operation.OR
+        );
+
+        event.register(
+                ModEntityTypes.MUSH_ZOMBIE.get(),
+                SpawnPlacementTypes.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, spawnType, pos, random) -> Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random)
+                        && random.nextDouble() < Config.mushZombieSpawnChance,
+                RegisterSpawnPlacementsEvent.Operation.OR
+        );
+
+        event.register(
+                ModEntityTypes.MUSH_SKELETON.get(),
+                SpawnPlacementTypes.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, spawnType, pos, random) -> Monster.checkMonsterSpawnRules(type, level, spawnType, pos, random)
+                        && random.nextDouble() < Config.mushSkeletonSpawnChance,
                 RegisterSpawnPlacementsEvent.Operation.OR
         );
     }

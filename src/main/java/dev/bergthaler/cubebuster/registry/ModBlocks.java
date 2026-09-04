@@ -1,6 +1,7 @@
 package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
+import dev.bergthaler.cubebuster.block.MushBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.SoundType;
@@ -41,6 +42,17 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> PROTECTED_GLASS_PANE_T3 = BLOCKS.registerBlock("protected_glass_pane_t3",
             ProtectedGlassPaneBlock::new, glassProperties(MapColor.COLOR_PURPLE));
+
+    // Mush / Infected mechanic - see MushBlock's own doc for the spread behaviour. Not solid (partial-height
+    // layer collision, like snow), not a spawn platform, and randomly ticks so it can grow on its own.
+    public static final DeferredBlock<Block> MUSH_BLOCK = BLOCKS.registerBlock("mush_block",
+            MushBlock::new, BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .sound(SoundType.SLIME_BLOCK)
+                    .noOcclusion()
+                    .isValidSpawn((state, level, pos, type) -> false)
+                    .randomTicks()
+                    .strength(0.2F));
 
     private static BlockBehaviour.Properties glassProperties(MapColor color) {
         return BlockBehaviour.Properties.of()

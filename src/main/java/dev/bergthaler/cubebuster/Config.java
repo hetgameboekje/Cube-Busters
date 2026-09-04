@@ -268,6 +268,73 @@ public class Config {
             .comment("Maximum radius (blocks) around a Screamer that its summoned SiegeZombies can appear. Also used as the vertical search cap for that summon.")
             .defineInRange("screamerSummonMaxRadius", 16, 1, 128);
 
+    // --- Mush / Infected mechanic ---
+    // InfectedCreepers deal no explosion damage; instead they infect anything caught in the blast with the
+    // mush infection effect and spread MushBlock spores onto nearby ground. MushBlocks spread on their own
+    // over time (thickening, then climbing/creeping like vines) until cleared. MushZombie/MushSkeleton are
+    // weaker natural variants (lower HP; zombies mine slower) that can spawn once mush is established.
+
+    private static final ModConfigSpec.DoubleValue INFECTED_CREEPER_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Creeper spawn attempt becomes an InfectedCreeper instead.")
+            .defineInRange("infectedCreeperSpawnChance", 0.1, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue INFECTED_CREEPER_SPORE_RADIUS = BUILDER
+            .comment("Radius (blocks) around an InfectedCreeper's blast within which it spreads mush spores onto grass/sand/gravel/stone.")
+            .defineInRange("infectedCreeperSporeRadius", 3, 1, 16);
+
+    private static final ModConfigSpec.DoubleValue INFECTED_CREEPER_SPORE_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per qualifying block within infectedCreeperSporeRadius, that an InfectedCreeper blast places a mush spore there.")
+            .defineInRange("infectedCreeperSporeChance", 0.35, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue INFECTION_EFFECT_DURATION_TICKS = BUILDER
+            .comment("Duration (ticks, 20 = 1 second) of the mush infection effect applied to players caught in an InfectedCreeper blast, or who drink an Infection Potion.")
+            .defineInRange("infectionEffectDurationTicks", 20 * 45, 20, 20 * 60 * 20);
+
+    private static final ModConfigSpec.IntValue INFECTION_EFFECT_AMPLIFIER = BUILDER
+            .comment("Amplifier of the mush infection effect (0 = level I). Higher damages more often - see the effect's own tick logic.")
+            .defineInRange("infectionEffectAmplifier", 0, 0, 4);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_THICKEN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick, that a MushBlock below max thickness (8 layers, like a snow layer) grows one layer thicker.")
+            .defineInRange("mushBlockThickenChance", 0.3, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_VERTICAL_GROW_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick on a fully-thickened MushBlock, that it climbs upward onto the block above (vine-like vertical spread) if that space is free.")
+            .defineInRange("mushBlockVerticalGrowChance", 0.15, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_BLOCK_HORIZONTAL_SPREAD_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0), per random tick on a fully-thickened MushBlock, that it spreads sideways onto a neighboring qualifying block (grass/sand/gravel/stone).")
+            .defineInRange("mushBlockHorizontalSpreadChance", 0.05, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_MOB_HEALTH_MULTIPLIER = BUILDER
+            .comment("Max health multiplier applied to MushZombie/MushSkeleton relative to their non-mush counterpart (e.g. 0.6 = 40% less HP).")
+            .defineInRange("mushMobHealthMultiplier", 0.6, 0.1, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_ZOMBIE_MINING_SLOWDOWN_MULTIPLIER = BUILDER
+            .comment("Block-break time multiplier applied to MushZombie on top of the normal block-break duration (e.g. 1.8 = 80% slower to mine than a plain block-breaking zombie).")
+            .defineInRange("mushZombieMiningSlowdownMultiplier", 1.8, 1.0, 10.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_ZOMBIE_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Zombie spawn attempt becomes a MushZombie instead.")
+            .defineInRange("mushZombieSpawnChance", 0.08, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue MUSH_SKELETON_SPAWN_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) that a natural Skeleton spawn attempt becomes a MushSkeleton instead.")
+            .defineInRange("mushSkeletonSpawnChance", 0.08, 0.0, 1.0);
+
+    // Mush Ball (hoe) / Mush Block (shovel or shears) / Infection Potion (anything else, 25% chance) harvest
+    // outcomes for MushBlock live in its loot table (data/cubebuster/loot_table/blocks/mush_block.json), not
+    // here - loot tables are themselves the existing "data-driven, admin-editable" mechanism for drop tables in
+    // this mod (see the protected-glass loot tables), so there's no separate Config knob duplicating them.
+
+    private static final ModConfigSpec.IntValue ANTIBIOTIC_FIREWORK_CURE_REGEN_DURATION_TICKS = BUILDER
+            .comment("Duration (ticks, 20 = 1 second) of the Regeneration burst granted when an Antibiotic Firework cures the mush infection effect.")
+            .defineInRange("antibioticFireworkCureRegenDurationTicks", 20 * 5, 0, 20 * 60);
+
+    private static final ModConfigSpec.IntValue ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER = BUILDER
+            .comment("Regeneration amplifier granted when an Antibiotic Firework cures the mush infection effect (0 = level I).")
+            .defineInRange("antibioticFireworkCureRegenAmplifier", 1, 0, 4);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean breaksBlocks;
@@ -328,6 +395,20 @@ public class Config {
     public static double enderZombieColdBiomeSpawnChance;
     public static double enderZombieTeleportChance;
     public static double enderZombieFarTeleportChance;
+    public static double infectedCreeperSpawnChance;
+    public static int infectedCreeperSporeRadius;
+    public static double infectedCreeperSporeChance;
+    public static int infectionEffectDurationTicks;
+    public static int infectionEffectAmplifier;
+    public static double mushBlockThickenChance;
+    public static double mushBlockVerticalGrowChance;
+    public static double mushBlockHorizontalSpreadChance;
+    public static double mushMobHealthMultiplier;
+    public static double mushZombieMiningSlowdownMultiplier;
+    public static double mushZombieSpawnChance;
+    public static double mushSkeletonSpawnChance;
+    public static int antibioticFireworkCureRegenDurationTicks;
+    public static int antibioticFireworkCureRegenAmplifier;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -415,5 +496,20 @@ public class Config {
         enderZombieColdBiomeSpawnChance = ENDER_ZOMBIE_COLD_BIOME_SPAWN_CHANCE.get();
         enderZombieTeleportChance = ENDER_ZOMBIE_TELEPORT_CHANCE.get();
         enderZombieFarTeleportChance = ENDER_ZOMBIE_FAR_TELEPORT_CHANCE.get();
+
+        infectedCreeperSpawnChance = INFECTED_CREEPER_SPAWN_CHANCE.get();
+        infectedCreeperSporeRadius = INFECTED_CREEPER_SPORE_RADIUS.get();
+        infectedCreeperSporeChance = INFECTED_CREEPER_SPORE_CHANCE.get();
+        infectionEffectDurationTicks = INFECTION_EFFECT_DURATION_TICKS.get();
+        infectionEffectAmplifier = INFECTION_EFFECT_AMPLIFIER.get();
+        mushBlockThickenChance = MUSH_BLOCK_THICKEN_CHANCE.get();
+        mushBlockVerticalGrowChance = MUSH_BLOCK_VERTICAL_GROW_CHANCE.get();
+        mushBlockHorizontalSpreadChance = MUSH_BLOCK_HORIZONTAL_SPREAD_CHANCE.get();
+        mushMobHealthMultiplier = MUSH_MOB_HEALTH_MULTIPLIER.get();
+        mushZombieMiningSlowdownMultiplier = MUSH_ZOMBIE_MINING_SLOWDOWN_MULTIPLIER.get();
+        mushZombieSpawnChance = MUSH_ZOMBIE_SPAWN_CHANCE.get();
+        mushSkeletonSpawnChance = MUSH_SKELETON_SPAWN_CHANCE.get();
+        antibioticFireworkCureRegenDurationTicks = ANTIBIOTIC_FIREWORK_CURE_REGEN_DURATION_TICKS.get();
+        antibioticFireworkCureRegenAmplifier = ANTIBIOTIC_FIREWORK_CURE_REGEN_AMPLIFIER.get();
     }
 }
