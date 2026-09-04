@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.bergthaler.cubebuster.client.BlueZombieRenderer;
 import dev.bergthaler.cubebuster.client.EnderZombieRenderer;
 import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
+import dev.bergthaler.cubebuster.client.HordeBossRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
@@ -71,6 +72,7 @@ public class Cubebuster {
             event.registerEntityRenderer(ModEntityTypes.RED_ZOMBIE.get(), RedZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SCREAMER.get(), ScreamerRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HORDE_BOSS.get(), HordeBossRenderer::new);
         }
 
         @SubscribeEvent

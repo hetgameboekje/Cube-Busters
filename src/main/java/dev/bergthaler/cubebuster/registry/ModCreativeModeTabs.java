@@ -26,6 +26,7 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.RED_ZOMBIE_SPAWN_EGG.get());
                                 output.accept(ModItems.ENDER_ZOMBIE_SPAWN_EGG.get());
                                 output.accept(ModItems.SCREAMER_SPAWN_EGG.get());
+                                output.accept(ModItems.HORDE_BOSS_SPAWN_EGG.get());
                                 output.accept(ModItems.SIEGE_PICKAXE.get());
                                 output.accept(ModItems.PROTECTED_GLASS_T1.get());
                                 output.accept(ModItems.PROTECTED_GLASS_T2.get());

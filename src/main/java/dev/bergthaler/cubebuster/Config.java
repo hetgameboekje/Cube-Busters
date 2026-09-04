@@ -268,6 +268,78 @@ public class Config {
             .comment("Maximum radius (blocks) around a Screamer that its summoned SiegeZombies can appear. Also used as the vertical search cap for that summon.")
             .defineInRange("screamerSummonMaxRadius", 16, 1, 128);
 
+    // --- Horde Boss (integration layer) ---
+    // Recurring boss event triggered by (per-player aggro score) x (mush block density near the player). Purely
+    // an integration layer: reads AggroManager's score and scans for ModBlockTags.MUSH_BLOCKS, doesn't modify
+    // either system. See event/HordeBossCapManager, event/HordeBossDensity, event/HordeBossPacing,
+    // event/HordeBossSpawnHandler for the pieces this config drives.
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_DENSITY_RADIUS = BUILDER
+            .comment("Radius (blocks) around a player that the Horde Boss trigger scans for mush blocks (ModBlockTags.MUSH_BLOCKS).",
+                    "Density is measured as a simple count of tagged blocks within this radius - the simplest method to implement and tune, chosen over a % ground-coverage calculation.")
+            .defineInRange("hordeBossDensityRadius", 16, 1, 64);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_TRIGGER_THRESHOLD = BUILDER
+            .comment("Trigger threshold for (player aggro score) x (mush blocks counted within hordeBossDensityRadius). Once a player's product crosses this, each hordeBossCheckIntervalTicks roll has a hordeBossBaseTriggerChance (scaled by day/night pacing) shot at spawning a boss for them.",
+                    "With defaults (aggro maxes at 600, a heavily mushed area might have a few hundred tagged blocks in range), this is meant to require both a genuinely aggravated player AND a genuinely infested area - neither alone should be enough.")
+            .defineInRange("hordeBossTriggerThreshold", 6000, 1, 10_000_000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CHECK_INTERVAL_TICKS = BUILDER
+            .comment("How often (ticks, 20 = 1 second) each player is checked for a Horde Boss trigger roll.")
+            .defineInRange("hordeBossCheckIntervalTicks", 1200, 20, 20 * 60 * 60);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_BASE_TRIGGER_CHANCE = BUILDER
+            .comment("Chance (0.0-1.0) per hordeBossCheckIntervalTicks roll that a player whose aggro-x-density product is over the threshold actually spawns a boss, before day/night pacing scales it down.")
+            .defineInRange("hordeBossBaseTriggerChance", 0.15, 0.0, 1.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_DAY_PACING_MULTIPLIER = BUILDER
+            .comment("Trigger-chance multiplier during full daylight (7 Days to Die-style pacing: minimal buildup by day, ramping up toward night). 0.05 means daytime rolls succeed at 5% of their nighttime rate.")
+            .defineInRange("hordeBossDayPacingMultiplier", 0.05, 0.0, 1.0);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_PACING_RAMP_TICKS = BUILDER
+            .comment("Width (ticks, 20 = 1 second) of the dusk/dawn transition window the pacing multiplier ramps linearly across, centered on vanilla's day/night boundaries. ~500 ticks (25s) matches the 7 Days to Die-style buildup this is modeled on.")
+            .defineInRange("hordeBossPacingRampTicks", 500, 20, 12000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_COOLDOWN_TICKS = BUILDER
+            .comment("Per-player cooldown (ticks, 20 = 1 second) after a Horde Boss spawns for them, before another can trigger for them - independent of day/night pacing, which alone doesn't prevent an immediate re-trigger right after a boss fight ends. Default is half a Minecraft day.")
+            .defineInRange("hordeBossCooldownTicks", 12000, 0, 20 * 60 * 60 * 24);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_PLAYER_DAILY_CAP = BUILDER
+            .comment("Maximum Horde Boss spawns attributed to a single player per Minecraft day (see hordeBossClusterCap for what happens when multiple players are clustered together).")
+            .defineInRange("hordeBossPlayerDailyCap", 3, 1, 1000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CLUSTER_CAP = BUILDER
+            .comment("When 2+ players triggering Horde Boss spawns are within hordeBossClusterChunkRadius chunks of each other (Chebyshev distance), their spawns share this combined cap instead of each getting their own hordeBossPlayerDailyCap independently. Each player's own hordeBossPlayerDailyCap still applies on top, so this mainly matters once 4+ players cluster together.")
+            .defineInRange("hordeBossClusterCap", 9, 1, 1000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_CLUSTER_CHUNK_RADIUS = BUILDER
+            .comment("Chebyshev chunk-distance cutoff for clustering: spawn attempts <= this many chunks apart share the clustered group cap (hordeBossClusterCap); > this many chunks apart, each player uses their own individual cap (hordeBossPlayerDailyCap). No dead zone at the boundary - exactly this distance still counts as clustered.")
+            .defineInRange("hordeBossClusterChunkRadius", 5, 1, 64);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SERVER_DAILY_CAP = BUILDER
+            .comment("Hard ceiling on total Horde Boss spawns server-wide per Minecraft day, regardless of per-player or cluster caps. Whichever cap (this, the cluster cap, or the per-player cap) is hit first blocks further spawns.")
+            .defineInRange("hordeBossServerDailyCap", 15, 1, 10000);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SPAWN_SAFE_ZONE_RADIUS = BUILDER
+            .comment("Radius (blocks) around the triggering player within which a Horde Boss spawn attempt never places the boss.")
+            .defineInRange("hordeBossSpawnSafeZoneRadius", 16, 0, 128);
+
+    private static final ModConfigSpec.IntValue HORDE_BOSS_SPAWN_MAX_RADIUS = BUILDER
+            .comment("Maximum radius (blocks) around the triggering player that a Horde Boss spawn attempt searches for a spot in.")
+            .defineInRange("hordeBossSpawnMaxRadius", 40, 1, 256);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_MAX_HEALTH = BUILDER
+            .comment("Horde Boss max health (vanilla zombie is 20).")
+            .defineInRange("hordeBossMaxHealth", 150.0, 1.0, 10000.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_ATTACK_DAMAGE = BUILDER
+            .comment("Horde Boss melee attack damage (vanilla zombie is 3).")
+            .defineInRange("hordeBossAttackDamage", 12.0, 0.0, 1000.0);
+
+    private static final ModConfigSpec.DoubleValue HORDE_BOSS_MOVEMENT_SPEED = BUILDER
+            .comment("Horde Boss movement speed attribute (vanilla zombie is 0.23).")
+            .defineInRange("hordeBossMovementSpeed", 0.26, 0.01, 5.0);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean breaksBlocks;
@@ -328,6 +400,22 @@ public class Config {
     public static double enderZombieColdBiomeSpawnChance;
     public static double enderZombieTeleportChance;
     public static double enderZombieFarTeleportChance;
+    public static int hordeBossDensityRadius;
+    public static int hordeBossTriggerThreshold;
+    public static int hordeBossCheckIntervalTicks;
+    public static double hordeBossBaseTriggerChance;
+    public static double hordeBossDayPacingMultiplier;
+    public static int hordeBossPacingRampTicks;
+    public static int hordeBossCooldownTicks;
+    public static int hordeBossPlayerDailyCap;
+    public static int hordeBossClusterCap;
+    public static int hordeBossClusterChunkRadius;
+    public static int hordeBossServerDailyCap;
+    public static int hordeBossSpawnSafeZoneRadius;
+    public static int hordeBossSpawnMaxRadius;
+    public static double hordeBossMaxHealth;
+    public static double hordeBossAttackDamage;
+    public static double hordeBossMovementSpeed;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -415,5 +503,22 @@ public class Config {
         enderZombieColdBiomeSpawnChance = ENDER_ZOMBIE_COLD_BIOME_SPAWN_CHANCE.get();
         enderZombieTeleportChance = ENDER_ZOMBIE_TELEPORT_CHANCE.get();
         enderZombieFarTeleportChance = ENDER_ZOMBIE_FAR_TELEPORT_CHANCE.get();
+
+        hordeBossDensityRadius = HORDE_BOSS_DENSITY_RADIUS.get();
+        hordeBossTriggerThreshold = HORDE_BOSS_TRIGGER_THRESHOLD.get();
+        hordeBossCheckIntervalTicks = HORDE_BOSS_CHECK_INTERVAL_TICKS.get();
+        hordeBossBaseTriggerChance = HORDE_BOSS_BASE_TRIGGER_CHANCE.get();
+        hordeBossDayPacingMultiplier = HORDE_BOSS_DAY_PACING_MULTIPLIER.get();
+        hordeBossPacingRampTicks = HORDE_BOSS_PACING_RAMP_TICKS.get();
+        hordeBossCooldownTicks = HORDE_BOSS_COOLDOWN_TICKS.get();
+        hordeBossPlayerDailyCap = HORDE_BOSS_PLAYER_DAILY_CAP.get();
+        hordeBossClusterCap = HORDE_BOSS_CLUSTER_CAP.get();
+        hordeBossClusterChunkRadius = HORDE_BOSS_CLUSTER_CHUNK_RADIUS.get();
+        hordeBossServerDailyCap = HORDE_BOSS_SERVER_DAILY_CAP.get();
+        hordeBossSpawnSafeZoneRadius = HORDE_BOSS_SPAWN_SAFE_ZONE_RADIUS.get();
+        hordeBossSpawnMaxRadius = HORDE_BOSS_SPAWN_MAX_RADIUS.get();
+        hordeBossMaxHealth = HORDE_BOSS_MAX_HEALTH.get();
+        hordeBossAttackDamage = HORDE_BOSS_ATTACK_DAMAGE.get();
+        hordeBossMovementSpeed = HORDE_BOSS_MOVEMENT_SPEED.get();
     }
 }
