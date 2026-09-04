@@ -8,6 +8,7 @@ import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
+import dev.bergthaler.cubebuster.entity.Turret;
 import dev.bergthaler.cubebuster.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -40,6 +41,7 @@ public final class ModSetupEvents {
         event.put(ModEntityTypes.RED_ZOMBIE.get(), RedZombie.createAttributes().build());
         event.put(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombie.createAttributes().build());
         event.put(ModEntityTypes.SCREAMER.get(), Screamer.createAttributes().build());
+        event.put(ModEntityTypes.TURRET.get(), Turret.createAttributes().build());
     }
 
     @SubscribeEvent

@@ -7,6 +7,7 @@ import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
+import dev.bergthaler.cubebuster.client.TurretRenderer;
 import dev.bergthaler.cubebuster.registry.ModAttachmentTypes;
 import dev.bergthaler.cubebuster.registry.ModBlocks;
 import dev.bergthaler.cubebuster.registry.ModCreativeModeTabs;
@@ -71,6 +72,7 @@ public class Cubebuster {
             event.registerEntityRenderer(ModEntityTypes.RED_ZOMBIE.get(), RedZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SCREAMER.get(), ScreamerRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TURRET.get(), TurretRenderer::new);
         }
 
         @SubscribeEvent

@@ -1,6 +1,7 @@
 package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
+import dev.bergthaler.cubebuster.item.TurretItem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.PickaxeItem;
@@ -58,6 +59,24 @@ public final class ModItems {
 
     public static final DeferredItem<DeferredSpawnEggItem> SCREAMER_SPAWN_EGG = ITEMS.register("screamer_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntityTypes.SCREAMER, 0xFF00FF, 0xFFB3DE, new Item.Properties()));
+
+    // Placeholder ammo item for the Turret (see entity.Turret / newmechanics.md "Turret" section). The real
+    // Cactus Economy branch is expected to add a proper "thorns" item (from shearing cactus) - once that merges,
+    // this should be deleted and Turret's ammo-type check (see Turret#isValidAmmo) pointed at the real item
+    // instead. Kept as a plain Item (not stackable-restricted, not tool-tagged) since its only job right now is
+    // "a thing you can load into a turret."
+    public static final DeferredItem<Item> THORN_AMMO = ITEMS.register("thorn_ammo",
+            () -> new Item(new Item.Properties()));
+
+    // Deploys a Turret entity on right-click (see item.TurretItem) - starts deactivated, needs a manual
+    // shift-right-click to switch on (see Turret#mobInteract).
+    public static final DeferredItem<TurretItem> TURRET = ITEMS.register("turret",
+            () -> new TurretItem(false, new Item.Properties()));
+
+    // Same deployable, but starts active immediately - the "sentry" variant referenced in the crafting spec
+    // (eye of ender as a placeholder tier-up material, see data/cubebuster/recipe/turret_sentry.json).
+    public static final DeferredItem<TurretItem> SENTRY_TURRET = ITEMS.register("sentry_turret",
+            () -> new TurretItem(true, new Item.Properties()));
 
     private ModItems() {
     }

@@ -7,6 +7,7 @@ import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
+import dev.bergthaler.cubebuster.entity.Turret;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -60,6 +61,16 @@ public final class ModEntityTypes {
                     .eyeHeight(1.74F)
                     .clientTrackingRange(8)
                     .build("screamer"));
+
+    // Player-deployed, stationary (see Turret#travel) - not naturally spawned, no natural spawn placement.
+    // Sized/eye-height like a dispenser-ish stubby block rather than a humanoid, but the renderer currently
+    // reuses the zombie model as a placeholder (see client.TurretRenderer) - functional over pretty for now.
+    public static final DeferredHolder<EntityType<?>, EntityType<Turret>> TURRET = ENTITY_TYPES.register("turret",
+            () -> EntityType.Builder.<Turret>of(Turret::new, MobCategory.MISC)
+                    .sized(0.8F, 1.2F)
+                    .eyeHeight(1.0F)
+                    .clientTrackingRange(10)
+                    .build("turret"));
 
     private ModEntityTypes() {
     }

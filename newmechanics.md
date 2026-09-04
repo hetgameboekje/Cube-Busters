@@ -82,18 +82,20 @@ Tracks design status per mechanic discussed for Cube Busters. Status legend:
 ---
 
 ## Turret
-**Status: 🟡 Partially decided**
+**Status: ✅ Architecture decided and built (MVP) — some sub-items are rough/placeholder, see notes**
 
 | Aspect | Status | Notes |
 |---|---|---|
-| AI base | ✅ | Reuse vanilla skeleton `RangedAttackGoal`/`RangedBowAttackGoal` + `NearestAttackableTargetGoal` |
-| Immobility | ❓ | Needs movement/wander goals stripped; some attack-goals assume repositioning — needs handling |
-| Sentry/manual toggle | ❓ | Needs custom `GoalSelector` add/remove switch based on block config |
-| Multi-projectile support | ❓ | Vanilla `RangedAttackMob` only supports one projectile type; needs custom interface, dispenser-like item-based switch |
-| Architecture choice | ❓ | Undecided: skeleton-based entity AI vs. block-entity with dispenser-style `DispenseItemBehavior` |
-| Crafting recipe | 🟡 | Seat + dispenser + crossbow + iron (+ eye of ender for sentry, placeholder material) |
-| "Watching eye" core item | ⬜ | Concept only — future reuse for doors/traps not designed |
-| Thorn ammo | ✅ | Thorns usable as turret ammunition |
+| Architecture choice | ✅ | **Entity-based**, decided and built. `entity/Turret.java` extends `PathfinderMob` + `RangedAttackMob` — the natural fit for reusing vanilla ranged-attack `Goal`s, which the AI-base line below required anyway. No block/block-entity involved at all. |
+| AI base | ✅ | Uses vanilla `RangedAttackGoal` (not `RangedBowAttackGoal` — see Immobility note) + `NearestAttackableTargetGoal<Monster>` unmodified, wired in `Turret#registerGoals()`. Targets hostile mobs, not the player — it's a defensive mob. |
+| Immobility | ✅ | `Turret#travel(Vec3)` discards horizontal input (`super.travel(Vec3.ZERO)`) regardless of what any goal tries to do — stronger than just omitting wander goals, since `RangedAttackGoal` itself calls `moveTo()` when a target is out of range. Verified by inspection that `RangedAttackGoal` still aims/fires correctly at a stationary mob (it just never manages to close distance beyond its fixed radius, which for a turret is the desired behavior) — **not verified in a running client/server**, see Verification note below. |
+| Sentry/manual toggle | ✅ | Shift-right-click with an empty hand flips `Turret#isActive()`, which adds/removes the attack goal from the `GoalSelector` at runtime (`updateAttackGoal()`). Also polled against `level().hasNeighborSignal(...)` every 10 ticks in `aiStep()` — a redstone signal forces the turret off regardless of its manual state, satisfying the "or a nearby lever/redstone signal" alternative from the spec without needing a companion block. |
+| Multi-projectile support | ✅ | Single-slot ammo (`SynchedEntityData` `ItemStack`, right-click to load/withdraw, mirrors item frames). `Turret#performRangedAttack` switches on the loaded item: `minecraft:firework_rocket` → `FireworkRocketEntity`, `minecraft:fire_charge` → `SmallFireball`, anything else (including the new `THORN_AMMO` placeholder) → a plain `Arrow` with configurable damage (`Config.turretThornDamage`). No ammo loaded = turret aims but never fires. |
+| Crafting recipe | ✅ | Two recipes, both shaped 3x3: `data/cubebuster/recipe/turret.json` (iron ingots + dispenser + crossbow + **`minecraft:oak_stairs`** as the "seat" placeholder — no seat item exists anywhere in the codebase yet, oak stairs picked as the closest vanilla stand-in, flagged here rather than silently guessed) and `turret_sentry.json` (same plus an eye of ender, per spec, producing the sentry variant that starts active instead of needing a manual toggle). |
+| "Watching eye" core item | ⬜ | Still concept-only, not built — deliberately. Turret's ammo/toggle mechanisms don't hardcode "only turrets can hold an item slot" (the ammo slot is a plain field on `Turret`, not a shared/global registry), so a future standalone "watching eye" item for doors/traps isn't architecturally blocked, it just doesn't exist yet. |
+| Thorn ammo | 🟡 | Turret accepts a placeholder `cubebuster:thorn_ammo` item (plain `Item`, see `ModItems.THORN_AMMO`) since no real "thorns" item exists in this branch. **Follow-up once the Cactus Economy branch merges**: delete the placeholder and point `Turret#isValidAmmo`/`performRangedAttack` at the real thorns item instead. |
+
+**Verification note:** built and compiles clean (`./gradlew compileJava` / `./gradlew build`), but not run in a live client/server in this environment — no in-game confirmation that targeting, firing, the toggle, or the recipes actually behave as intended. Treat as implemented-but-unplaytested.
 
 ---
 

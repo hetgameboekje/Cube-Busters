@@ -33,6 +33,9 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T1.get());
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T2.get());
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T3.get());
+                                output.accept(ModItems.TURRET.get());
+                                output.accept(ModItems.SENTRY_TURRET.get());
+                                output.accept(ModItems.THORN_AMMO.get());
                             })
                             .build());
 

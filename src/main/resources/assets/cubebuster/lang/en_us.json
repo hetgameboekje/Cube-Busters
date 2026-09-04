@@ -18,5 +18,11 @@
   "block.cubebuster.protected_glass_pane_t1": "Reinforced Glass Pane (Tier 1)",
   "block.cubebuster.protected_glass_pane_t2": "Reinforced Glass Pane (Tier 2)",
   "block.cubebuster.protected_glass_pane_t3": "Reinforced Glass Pane (Tier 3)",
+  "entity.cubebuster.turret": "Turret",
+  "item.cubebuster.turret": "Turret",
+  "item.cubebuster.sentry_turret": "Sentry Turret",
+  "item.cubebuster.thorn_ammo": "Thorn Ammo",
+  "message.cubebuster.turret_activated": "Turret activated",
+  "message.cubebuster.turret_deactivated": "Turret deactivated",
   "creativetab.cubebuster": "CubeBuster"
 }
