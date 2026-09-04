@@ -7,6 +7,7 @@ import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
+import dev.bergthaler.cubebuster.registry.ModAttachmentTypes;
 import dev.bergthaler.cubebuster.registry.ModBlocks;
 import dev.bergthaler.cubebuster.registry.ModCreativeModeTabs;
 import dev.bergthaler.cubebuster.registry.ModEntityTypes;
@@ -41,6 +42,7 @@ public class Cubebuster {
         ModItems.ITEMS.register(modEventBus);
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
         ModCreativeModeTabs.CREATIVE_MODE_TABS.register(modEventBus);
+        ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

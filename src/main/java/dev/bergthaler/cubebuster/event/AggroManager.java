@@ -1,42 +1,45 @@
 package dev.bergthaler.cubebuster.event;
 
 import dev.bergthaler.cubebuster.Config;
+import dev.bergthaler.cubebuster.registry.ModAttachmentTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 /**
  * Per-player aggro score: builds up from player interactions (see {@link AggroInteractionHandler}), decays
- * slowly over time ({@link AggroTickHandler}), and drives the escalating spawn table in
- * {@link AggroSpawnHandler}. In-memory only, like the other per-player cooldown maps in this package - resets
- * on server restart rather than being saved to player data.
+ * slowly over time once a short hold period has passed ({@link AggroTickHandler}), and drives the escalating
+ * spawn table in {@link AggroSpawnHandler}.
+ * <p>
+ * Persisted via a {@link ModAttachmentTypes#AGGRO} data attachment on the player, so (unlike the old in-memory
+ * map) it survives disconnects and server restarts. It's still not copied across death/respawn (no
+ * {@code copyOnDeath()} on the attachment), which is what gives {@link AggroInteractionHandler}'s
+ * reset-to-zero-on-death behavior its effect.
  */
 public final class AggroManager {
-    private static final Map<UUID, Integer> scores = new HashMap<>();
 
     public static int getScore(ServerPlayer player) {
-        return scores.getOrDefault(player.getUUID(), 0);
+        return player.getData(ModAttachmentTypes.AGGRO).score();
     }
 
     public static void addScore(ServerPlayer player, int amount) {
-        scores.put(player.getUUID(), Math.min(Config.aggroMaxScore, getScore(player) + amount));
+        AggroState current = player.getData(ModAttachmentTypes.AGGRO);
+        int updated = Math.min(Config.aggroMaxScore, current.score() + amount);
+        long decayResumeTick = player.level().getGameTime() + Config.aggroDecayHoldTicks;
+        player.setData(ModAttachmentTypes.AGGRO, new AggroState(updated, decayResumeTick));
     }
 
     public static void reset(ServerPlayer player) {
-        scores.remove(player.getUUID());
+        player.setData(ModAttachmentTypes.AGGRO, AggroState.EMPTY);
     }
 
     static void decay(ServerPlayer player) {
-        int updated = Math.max(0, getScore(player) - Config.aggroDecayAmount);
-        if (updated == 0) {
-            scores.remove(player.getUUID());
-        } else {
-            scores.put(player.getUUID(), updated);
+        AggroState current = player.getData(ModAttachmentTypes.AGGRO);
+        if (current.score() == 0 || player.level().getGameTime() < current.decayResumeTick()) {
+            return;
         }
+        int updated = Math.max(0, current.score() - Config.aggroDecayAmount);
+        player.setData(ModAttachmentTypes.AGGRO, new AggroState(updated, current.decayResumeTick()));
     }
 
     /** 0 (no spawns) through 5 (max), based on the aggroLevelNThreshold config values. */

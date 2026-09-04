@@ -212,6 +212,10 @@ public class Config {
             .comment("How many points the aggro score loses every aggroDecayIntervalTicks. Defaults (3 points/second) roughly match the max sustained gain rate from repeated interactions, so the score can trend back down even while you keep interacting, not just once you stop. A maxed-out score takes about 3-4 minutes to fully cool down if you stop.")
             .defineInRange("aggroDecayAmount", 3, 1, 1000);
 
+    private static final ModConfigSpec.IntValue AGGRO_DECAY_HOLD_TICKS = BUILDER
+            .comment("How long (ticks, 20 = 1 second) a player's aggro score holds steady after their last gain before passive decay resumes. Each new gain (interaction or sustained sight) pushes this hold window forward, so decay only kicks in once the player has actually stopped provoking, not the instant an interaction cooldown elapses.")
+            .defineInRange("aggroDecayHoldTicks", 100, 0, 20 * 60 * 60);
+
     private static final ModConfigSpec.IntValue AGGRO_SPAWN_CHECK_INTERVAL_TICKS = BUILDER
             .comment("How often (ticks, 20 = 1 second) each player's current aggro level is rolled into a spawn.")
             .defineInRange("aggroSpawnCheckIntervalTicks", 600, 20, 20 * 60 * 60);
@@ -284,6 +288,7 @@ public class Config {
     public static int aggroMaxScore;
     public static int aggroDecayIntervalTicks;
     public static int aggroDecayAmount;
+    public static int aggroDecayHoldTicks;
     public static int aggroSpawnCheckIntervalTicks;
     public static int aggroLevel1Threshold;
     public static int aggroLevel2Threshold;
@@ -344,6 +349,7 @@ public class Config {
         aggroMaxScore = AGGRO_MAX_SCORE.get();
         aggroDecayIntervalTicks = AGGRO_DECAY_INTERVAL_TICKS.get();
         aggroDecayAmount = AGGRO_DECAY_AMOUNT.get();
+        aggroDecayHoldTicks = AGGRO_DECAY_HOLD_TICKS.get();
         aggroSpawnCheckIntervalTicks = AGGRO_SPAWN_CHECK_INTERVAL_TICKS.get();
         aggroLevel1Threshold = AGGRO_LEVEL_1_THRESHOLD.get();
         aggroLevel2Threshold = AGGRO_LEVEL_2_THRESHOLD.get();
