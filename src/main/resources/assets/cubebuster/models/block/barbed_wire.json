@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "cubebuster:block/barbed_wire",
+    "particle": "cubebuster:block/barbed_wire"
+  }
+}

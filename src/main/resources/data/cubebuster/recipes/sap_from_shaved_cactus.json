@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "cubebuster:shaved_cactus" }
+  ],
+  "result": {
+    "id": "cubebuster:sap",
+    "count": 1
+  }
+}

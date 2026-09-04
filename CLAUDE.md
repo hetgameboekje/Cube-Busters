@@ -103,6 +103,50 @@ event is raised on.
 This was the blocking prerequisite for the Horde Boss cap system
 (see `NEW_MECHANICS.md`) — it's unblocked now.
 
+## Currently shipped: Cactus Economy & Cactus/Pumpkin Golem
+
+Early-game defensive/utility blocks and a cactus sap → juice → mocktail
+crafting chain (net-new, no dependency on other systems), plus a melee
+utility golem that consumes the chain's thorns as its repair material.
+
+- **Blocks**: `BarbedWireBlock`, `ThornedBushBlock`,
+  `CollapsingTrapdoorBlock` (all in `block/`) — cobweb-shaped
+  slow+damage hazard, a non-solid cactus-analog bush, and a trapdoor that
+  springs open a short delay after something steps on it and
+  auto-recloses (a reusable trap, not a one-shot break).
+- **Chain**: shearing a cactus (`event/CactusShearHandler.java`) yields
+  thorns + shaved cactus; shaved cactus branches into cactus planks (+
+  any planks) or sap; 3 sap → juice; juice + ash (smelted from rotten
+  flesh) at a brewing stand → mocktail
+  (`event/ModBrewingRecipes.java`, a `RegisterBrewingRecipesEvent` hook).
+  No alcohol-themed items or flavor text anywhere in this chain (explicit
+  project rule).
+- **Cactus/Pumpkin Golem** (`entity/CactusGolem.java`): extends vanilla
+  `IronGolem`, but `registerGoals()` fully replaces its village-defense
+  goals with a plain wander/look/melee set targeting `Zombie` and its
+  subclasses only (Husks, Drowned, every cubebuster zombie variant) —
+  never players. Reuses vanilla's `IronGolemRenderer`/model wholesale
+  rather than bespoke art (a placeholder worth revisiting).
+- **Cactus limb + Looting transfer**: right-clicking the golem with a
+  `cactus_limb` item attaches it to the golem's MAINHAND equipment slot.
+  Vanilla's own Looting enchantment effect is hard-gated to player
+  attackers (`data/minecraft/enchantment/looting.json`'s
+  `entity_properties: player` requirement), so `CactusLimbHandler`
+  implements the transfer itself: on `LivingDropsEvent`, it reads the
+  limb's Looting level and duplicates drops with a per-level chance
+  (an approximation of vanilla's reroll, not identical to it).
+- **Elytra-style degradation**: `CactusLimbHandler` sets the limb's
+  damage value directly on every golem hit rather than calling
+  `ItemStack#hurtAndBreak`, so it never vanishes/breaks at max damage —
+  it just stops granting Looting once maxed out.
+- **Repair**: Mending works via the `enchantable/durability` item tag;
+  anvil repair with thorns is fixed at 1 XP level via a custom
+  `AnvilUpdateEvent` handler in `CactusLimbHandler`, bypassing vanilla's
+  scaling repair cost.
+- All tunables (damage, slow, trap timing, sap/juice yields, golem
+  HP/damage, limb degrade rate, anvil repair cost) live in `Config.java`
+  under the "Cactus Economy" / "Cactus/Pumpkin Golem" sections.
+
 ## Known bugs (fixed)
 
 ### 1. Aggro gain ignored creative/spectator mode — fixed
@@ -159,11 +203,8 @@ existing codebase:
   custom multi-projectile interface (fireball/firework/thorn-arrow).
   Architecture choice (entity-based vs. dispenser-style block-entity) not
   yet decided.
-- **Cactus economy** — early-game survival items (barbed wire, thorned
-  bush, collapsing trapdoor) and a cactus sap → juice → mocktail crafting
-  chain. Net-new, no dependency on existing systems.
-- **Cactus/Pumpkin Golem** — new mob, elytra-style durability item with
-  Looting-enchant transfer. Net-new.
+- ~~**Cactus economy**~~ / ~~**Cactus/Pumpkin Golem**~~ — done, see
+  "Currently shipped: Cactus Economy & Cactus/Pumpkin Golem" above.
 - **Custom structures** — mineshafts/sieged villages/bunkers as
   SiegeZombie/mush spawn points. Concept only, not designed in detail yet.
 

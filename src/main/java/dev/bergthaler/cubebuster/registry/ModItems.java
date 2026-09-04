@@ -2,6 +2,7 @@ package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.Rarity;
@@ -58,6 +59,59 @@ public final class ModItems {
 
     public static final DeferredItem<DeferredSpawnEggItem> SCREAMER_SPAWN_EGG = ITEMS.register("screamer_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntityTypes.SCREAMER, 0xFF00FF, 0xFFB3DE, new Item.Properties()));
+
+    // --- Cactus Economy items ---
+
+    public static final DeferredItem<net.minecraft.world.item.BlockItem> BARBED_WIRE =
+            ITEMS.registerSimpleBlockItem("barbed_wire", ModBlocks.BARBED_WIRE);
+
+    public static final DeferredItem<net.minecraft.world.item.BlockItem> THORNED_BUSH =
+            ITEMS.registerSimpleBlockItem("thorned_bush", ModBlocks.THORNED_BUSH);
+
+    public static final DeferredItem<net.minecraft.world.item.BlockItem> COLLAPSING_TRAPDOOR =
+            ITEMS.registerSimpleBlockItem("collapsing_trapdoor", ModBlocks.COLLAPSING_TRAPDOOR);
+
+    public static final DeferredItem<net.minecraft.world.item.BlockItem> CACTUS_PLANKS =
+            ITEMS.registerSimpleBlockItem("cactus_planks", ModBlocks.CACTUS_PLANKS);
+
+    // Sheared off a cactus block (see CactusShearHandler) alongside SHAVED_CACTUS. Also the anvil repair
+    // material for cactus-limb items (see CactusLimbAnvilRepairHandler) and thorn ammo for the (planned) turret.
+    public static final DeferredItem<Item> THORNS = ITEMS.registerSimpleItem("thorns");
+
+    // The other half of shearing a cactus. Branches into cactus planks (+ any plank) or sap (alone).
+    public static final DeferredItem<Item> SHAVED_CACTUS = ITEMS.registerSimpleItem("shaved_cactus");
+
+    public static final DeferredItem<Item> SAP = ITEMS.registerSimpleItem("sap");
+
+    // 3 sap -> 1 juice; juice + ash at a brewing stand -> mocktail. Both are drinkable, non-alcoholic (project
+    // rule: no alcohol-themed items anywhere in this chain, even though a vanilla brewing stand is involved).
+    public static final DeferredItem<Item> CACTUS_JUICE = ITEMS.register("cactus_juice",
+            () -> new Item(new Item.Properties()
+                    .food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.3F).build())
+                    .stacksTo(16)));
+
+    public static final DeferredItem<Item> MOCKTAIL = ITEMS.register("mocktail",
+            () -> new Item(new Item.Properties()
+                    .food(new FoodProperties.Builder().nutrition(6).saturationModifier(0.6F).build())
+                    .stacksTo(16)));
+
+    // Burnt-down leftovers - the brewing-stand filter ingredient for the mocktail. Smelted from rotten flesh
+    // (see data/cubebuster/recipes/ash_from_smelting.json) rather than anything alcohol-adjacent.
+    public static final DeferredItem<Item> ASH = ITEMS.registerSimpleItem("ash");
+
+    // --- Cactus/Pumpkin Golem ---
+
+    // Elytra-style durability: the golem (see CactusLimbDegradeHandler) manages its damage value directly and
+    // never lets it "break" (vanilla item-break/vanish behaviour is only triggered by ItemStack#hurtAndBreak,
+    // which this item's handling deliberately avoids), it just stops granting Looting once maxed out.
+    // Eligible for Mending (data/minecraft/tags/item/enchantable/durability.json) and for a fixed 1-level anvil
+    // repair with THORNS (see CactusLimbAnvilRepairHandler) rather than vanilla's scaling repair cost. Eligible
+    // for the Looting enchantment via data/minecraft/tags/item/enchantable/looting.json.
+    public static final DeferredItem<Item> CACTUS_LIMB = ITEMS.register("cactus_limb",
+            () -> new Item(new Item.Properties().durability(200).rarity(Rarity.UNCOMMON)));
+
+    public static final DeferredItem<DeferredSpawnEggItem> CACTUS_GOLEM_SPAWN_EGG = ITEMS.register("cactus_golem_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntityTypes.CACTUS_GOLEM, 0x2E7D32, 0xE59400, new Item.Properties()));
 
     private ModItems() {
     }

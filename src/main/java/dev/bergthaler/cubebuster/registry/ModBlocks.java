@@ -1,12 +1,16 @@
 package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
+import dev.bergthaler.cubebuster.block.BarbedWireBlock;
+import dev.bergthaler.cubebuster.block.CollapsingTrapdoorBlock;
+import dev.bergthaler.cubebuster.block.ThornedBushBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.TransparentBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -41,6 +45,45 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> PROTECTED_GLASS_PANE_T3 = BLOCKS.registerBlock("protected_glass_pane_t3",
             ProtectedGlassPaneBlock::new, glassProperties(MapColor.COLOR_PURPLE));
+
+    // --- Cactus Economy blocks ---
+
+    // Thin, non-solid hazard: same "walkable, but slowed and hurt while inside" shape as vanilla cobweb, with
+    // damage-over-time added in BarbedWireBlock#entityInside. Easy early-game perimeter defense.
+    public static final DeferredBlock<Block> BARBED_WIRE = BLOCKS.registerBlock("barbed_wire",
+            BarbedWireBlock::new, BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .noCollission()
+                    .strength(1.5F)
+                    .sound(SoundType.WOOL)
+                    .pushReaction(PushReaction.DESTROY));
+
+    // A plantable, cactus-like hazard bush - damages entities that touch it, but (unlike cactus) doesn't need
+    // sand and isn't a full block.
+    public static final DeferredBlock<Block> THORNED_BUSH = BLOCKS.registerBlock("thorned_bush",
+            ThornedBushBlock::new, BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .noCollission()
+                    .instabreak()
+                    .sound(SoundType.SWEET_BERRY_BUSH)
+                    .pushReaction(PushReaction.DESTROY));
+
+    // A trapdoor that springs open on its own a short time after something steps on it, then re-closes and
+    // resets itself - a reusable floor trap rather than a one-shot block.
+    public static final DeferredBlock<Block> COLLAPSING_TRAPDOOR = BLOCKS.registerBlock("collapsing_trapdoor",
+            CollapsingTrapdoorBlock::new, BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(3.0F)
+                    .sound(SoundType.WOOD)
+                    .noOcclusion());
+
+    // Plain building block, crafted from shaved cactus + planks - functionally identical to vanilla planks.
+    public static final DeferredBlock<Block> CACTUS_PLANKS = BLOCKS.registerSimpleBlock("cactus_planks",
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .strength(2.0F, 3.0F)
+                    .sound(SoundType.WOOD)
+                    .ignitedByLava());
 
     private static BlockBehaviour.Properties glassProperties(MapColor color) {
         return BlockBehaviour.Properties.of()

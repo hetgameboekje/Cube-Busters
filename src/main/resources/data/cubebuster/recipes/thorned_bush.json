@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    { "item": "minecraft:cactus" },
+    { "item": "cubebuster:thorns" },
+    { "item": "cubebuster:thorns" }
+  ],
+  "result": {
+    "id": "cubebuster:thorned_bush",
+    "count": 2
+  }
+}

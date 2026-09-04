@@ -14,6 +14,7 @@ import dev.bergthaler.cubebuster.registry.ModEntityTypes;
 import dev.bergthaler.cubebuster.registry.ModItems;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -71,6 +72,9 @@ public class Cubebuster {
             event.registerEntityRenderer(ModEntityTypes.RED_ZOMBIE.get(), RedZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.ENDER_ZOMBIE.get(), EnderZombieRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SCREAMER.get(), ScreamerRenderer::new);
+            // Reuses vanilla's IronGolemRenderer wholesale (CactusGolem extends IronGolem) rather than a bespoke
+            // model/texture - functional placeholder, see CLAUDE.md for the follow-up note on custom art.
+            event.registerEntityRenderer(ModEntityTypes.CACTUS_GOLEM.get(), IronGolemRenderer::new);
         }
 
         @SubscribeEvent
@@ -85,6 +89,9 @@ public class Cubebuster {
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T1.get(), RenderType.cutout());
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T2.get(), RenderType.cutout());
                 ItemBlockRenderTypes.setRenderLayer(ModBlocks.PROTECTED_GLASS_PANE_T3.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.BARBED_WIRE.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.THORNED_BUSH.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(ModBlocks.COLLAPSING_TRAPDOOR.get(), RenderType.cutout());
             });
         }
     }
