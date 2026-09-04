@@ -268,6 +268,26 @@ public class Config {
             .comment("Maximum radius (blocks) around a Screamer that its summoned SiegeZombies can appear. Also used as the vertical search cap for that summon.")
             .defineInRange("screamerSummonMaxRadius", 16, 1, 128);
 
+    // --- Turret ---
+    // Stationary defensive mob: reuses vanilla RangedAttackGoal/NearestAttackableTargetGoal for targeting, fires
+    // whatever's loaded into its single ammo slot (fireworks, fire charges, or thorn ammo - see ModItems).
+
+    private static final ModConfigSpec.DoubleValue TURRET_RANGE = BUILDER
+            .comment("Radius (blocks) within which a Turret will acquire a target and fire at it. Also used as its target-detection follow range.")
+            .defineInRange("turretRange", 16.0, 2.0, 64.0);
+
+    private static final ModConfigSpec.IntValue TURRET_ATTACK_INTERVAL_TICKS = BUILDER
+            .comment("Minimum ticks (20 = 1 second) between a Turret's shots.")
+            .defineInRange("turretAttackIntervalTicks", 40, 5, 20 * 60);
+
+    private static final ModConfigSpec.DoubleValue TURRET_MAX_HEALTH = BUILDER
+            .comment("Max health of a Turret.")
+            .defineInRange("turretMaxHealth", 20.0, 1.0, 200.0);
+
+    private static final ModConfigSpec.DoubleValue TURRET_THORN_DAMAGE = BUILDER
+            .comment("Base damage dealt by a Turret's shot when loaded with thorn ammo (the arrow-analog placeholder - see ModItems.THORN_AMMO). Fireworks/fire charges deal their own vanilla damage instead.")
+            .defineInRange("turretThornDamage", 4.0, 0.0, 50.0);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean breaksBlocks;
@@ -328,6 +348,10 @@ public class Config {
     public static double enderZombieColdBiomeSpawnChance;
     public static double enderZombieTeleportChance;
     public static double enderZombieFarTeleportChance;
+    public static double turretRange;
+    public static int turretAttackIntervalTicks;
+    public static double turretMaxHealth;
+    public static double turretThornDamage;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -415,5 +439,10 @@ public class Config {
         enderZombieColdBiomeSpawnChance = ENDER_ZOMBIE_COLD_BIOME_SPAWN_CHANCE.get();
         enderZombieTeleportChance = ENDER_ZOMBIE_TELEPORT_CHANCE.get();
         enderZombieFarTeleportChance = ENDER_ZOMBIE_FAR_TELEPORT_CHANCE.get();
+
+        turretRange = TURRET_RANGE.get();
+        turretAttackIntervalTicks = TURRET_ATTACK_INTERVAL_TICKS.get();
+        turretMaxHealth = TURRET_MAX_HEALTH.get();
+        turretThornDamage = TURRET_THORN_DAMAGE.get();
     }
 }

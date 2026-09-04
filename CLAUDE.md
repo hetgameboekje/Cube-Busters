@@ -103,6 +103,41 @@ event is raised on.
 This was the blocking prerequisite for the Horde Boss cap system
 (see `NEW_MECHANICS.md`) — it's unblocked now.
 
+## Currently shipped: Turret
+
+Stationary defensive mob, entity-based (`entity/Turret.java` extends
+`PathfinderMob implements RangedAttackMob`) rather than a block/block-entity
+— chosen specifically so it could reuse vanilla `RangedAttackGoal` +
+`NearestAttackableTargetGoal<Monster>` unmodified for targeting/combat,
+same as the AI-goal wiring pattern in `SiegeZombie`/`Screamer`. No custom
+targeting AI was written.
+
+Immobility isn't just "no wander goal" — `Turret#travel(Vec3)` discards all
+horizontal input every tick (`super.travel(Vec3.ZERO)`), so it can't be
+walked anywhere even by a goal that tries (`RangedAttackGoal` itself calls
+`moveTo()` when its target is out of range). Sentry mode is a runtime
+`GoalSelector` add/remove of the attack goal (`Turret#updateAttackGoal()`),
+toggled by shift-right-clicking with an empty hand, or forced off by a
+redstone signal at its position (polled in `aiStep()`, no block entity
+needed). Ammo is a single `SynchedEntityData` `ItemStack` slot loaded/
+withdrawn by right-click (mirrors item frames); `performRangedAttack`
+switches projectile type on whatever's loaded — firework rocket, fire
+charge, or a fallback `Arrow` (used for the placeholder `THORN_AMMO` item
+too, see follow-up below).
+
+Two crafting recipes (`data/cubebuster/recipe/turret.json` and
+`turret_sentry.json`): iron + dispenser + crossbow + `minecraft:oak_stairs`
+as a placeholder "seat" ingredient (no seat item exists in this codebase),
+the sentry variant adds an eye of ender and starts active instead of
+needing the manual toggle.
+
+**Known follow-up:** `ModItems.THORN_AMMO` is a placeholder plain `Item` —
+once the Cactus Economy branch's real thorns item lands, swap
+`Turret#isValidAmmo`/`performRangedAttack` over to it and delete the
+placeholder. See `newmechanics.md`'s Turret section for the full
+sub-item-by-sub-item status and design notes (including that this was
+built and compiles clean but not verified in a running client/server).
+
 ## Known bugs (fixed)
 
 ### 1. Aggro gain ignored creative/spectator mode — fixed
@@ -152,13 +187,10 @@ existing codebase:
     for the live clustering calculation only.
   - All thresholds config-adjustable, following the existing
     `Config.java` pattern.
-- **Turret** — reuse vanilla skeleton AI goals
-  (`RangedAttackGoal`/`RangedBowAttackGoal` + `NearestAttackableTargetGoal`)
-  for targeting/combat rather than writing custom AI. Still needs:
-  immobility handling, sentry/manual toggle via `GoalSelector`, and a
-  custom multi-projectile interface (fireball/firework/thorn-arrow).
-  Architecture choice (entity-based vs. dispenser-style block-entity) not
-  yet decided.
+- ~~**Turret**~~ — done (MVP), see "Currently shipped: Turret" above.
+  Entity-based, reuses vanilla `RangedAttackGoal` +
+  `NearestAttackableTargetGoal` unmodified. Thorn ammo is still a
+  placeholder item pending the Cactus Economy branch merging.
 - **Cactus economy** — early-game survival items (barbed wire, thorned
   bush, collapsing trapdoor) and a cactus sap → juice → mocktail crafting
   chain. Net-new, no dependency on existing systems.

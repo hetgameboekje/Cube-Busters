@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IDI",
+    "ECI",
+    "ISI"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "D": { "item": "minecraft:dispenser" },
+    "C": { "item": "minecraft:crossbow" },
+    "S": { "item": "minecraft:oak_stairs" },
+    "E": { "item": "minecraft:ender_eye" }
+  },
+  "result": {
+    "id": "cubebuster:sentry_turret",
+    "count": 1
+  }
+}
