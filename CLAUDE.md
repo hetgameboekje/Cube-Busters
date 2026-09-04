@@ -10,6 +10,18 @@ rundown of what's currently shipped (zombie variants, AI goals, spawn
 events, protected glass tier system, config). See `NEW_MECHANICS.md` for
 planned/in-progress features and their status.
 
+## Subagents
+
+Work in this repo is split across a `manager` subagent and seven domain
+subagents defined in `.claude/agents/`. Default to talking to `manager` —
+it routes requests to the right domain agent(s), sequences work that has
+cross-domain dependencies (e.g. Horde Boss needs the Aggro persistence
+rework first), and reports back in one voice instead of you juggling
+`aggro-agent`, `mob-agent`, `mush-agent`, `horde-boss-agent`,
+`turret-agent`, `cactus-agent`, and `structures-agent` yourself. See
+`.claude/agents/manager.md` for the full routing table and dependency
+notes.
+
 ## Build / test
 
 ```
