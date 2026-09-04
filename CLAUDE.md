@@ -68,19 +68,28 @@ src/main/resources/
 
 ## Currently shipped: Aggro system
 
-Per-player aggro score, **in-memory only** (`event/AggroManager.java`),
-driving escalating force-spawns (levels 1-5) via
+Per-player aggro score, **persisted via a NeoForge data attachment**
+(`event/AggroManager.java`, `registry/ModAttachmentTypes.java`,
+`event/AggroState.java`), driving escalating force-spawns (levels 1-5) via
 `event/AggroSpawnHandler.java` and `event/AggroTickHandler.java`, plus the
 `Screamer` mob (`entity/Screamer.java`) that calls in more SiegeZombies.
 See `README.md` for the level table and config knobs. `Screamer` uses its
 own texture, `textures/entity/scream_siege.png`, via
 `client/ScreamerRenderer.java`.
 
-**Known gap vs. planned design (see `NEW_MECHANICS.md`):** this aggro
-score decays within ~10 minutes and resets on server restart. The Horde
-Boss system being designed needs aggro that **never decays/resets** and is
-**persistent** — this is a behavior change to `AggroManager`, not a new
-system.
+The score is stored as an `AggroState(score, decayResumeTick)` record on
+the player itself (`ModAttachmentTypes.AGGRO`), so it survives disconnects
+and server restarts — unlike the old in-memory `UUID -> Integer` map. Each
+score gain pushes `decayResumeTick` forward by `Config.aggroDecayHoldTicks`
+(default 100 ticks / 5s); passive decay only resumes once that hold window
+has elapsed, so the score holds steady right after a gain instead of
+ticking down continuously. It still resets to 0 on death
+(`AggroInteractionHandler.onPlayerDeath`), and the attachment isn't copied
+across respawn (no `copyOnDeath()`), so this fires on the same instance the
+event is raised on.
+
+This was the blocking prerequisite for the Horde Boss cap system
+(see `NEW_MECHANICS.md`) — it's unblocked now.
 
 ## Known bugs (fixed)
 
@@ -111,10 +120,9 @@ check that file for full detail and current status per item before
 implementing. High-level summary of what's coming and how it fits the
 existing codebase:
 
-- **Aggro persistence rework** — make `AggroManager` scores
-  never-decaying and persistent across restarts (likely player capability
-  or saved data), instead of the current in-memory/decaying model. This is
-  a **blocking prerequisite** for the Horde Boss cap system below.
+- ~~**Aggro persistence rework**~~ — done, see "Currently shipped: Aggro
+  system" above. Was the blocking prerequisite for the Horde Boss cap
+  system below.
 - **Mush / Infected mechanic** — new creeper variant, spore/mush blocks,
   mush zombies, cure-item crafting chain (mortar & pestle). Net-new
   system, doesn't touch existing zombie variants directly.

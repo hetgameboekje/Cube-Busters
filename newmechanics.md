@@ -10,14 +10,14 @@ Tracks design status per mechanic discussed for Cube Busters. Status legend:
 ---
 
 ## Aggro System
-**Status: 🟡 Partially decided — blocking dependency**
+**Status: ✅ Persistence rework built**
 
 | Aspect | Status | Notes |
 |---|---|---|
 | Score triggers (chests, sprinting, noise) | ✅ | |
-| Decay rate | 🟡 | Currently decays too fast; target ~100 ticks / 5s hold before decay |
-| Score reset | ✅ | Never resets — persists indefinitely, including after boss events and player disconnects |
-| Per-player tracking | ❓ | **Not implemented yet — blocks the Horde Boss cap system below** |
+| Decay rate | ✅ | Score now holds for `aggroDecayHoldTicks` (default 100 ticks / 5s) after the last gain before decay resumes, instead of decaying continuously |
+| Score reset | ✅ | Persists indefinitely across disconnects and server restarts (data attachment on the player, `ModAttachmentTypes.AGGRO`); still resets to 0 on death via `AggroInteractionHandler` |
+| Per-player tracking | ✅ | Implemented via NeoForge data attachment (`AggroState` record: score + decay-resume tick), replacing the old in-memory `UUID -> Integer` map — unblocks the Horde Boss cap system below |
 | Eye-icon difficulty mapping | ✅ | disabled → hidden → easy (closed) → medium (slightly open, see-through-walls) → hard (wide open, stat boost) |
 
 ---
