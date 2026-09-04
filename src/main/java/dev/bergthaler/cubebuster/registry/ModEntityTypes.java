@@ -2,6 +2,7 @@ package dev.bergthaler.cubebuster.registry;
 
 import dev.bergthaler.cubebuster.Cubebuster;
 import dev.bergthaler.cubebuster.entity.BlueZombie;
+import dev.bergthaler.cubebuster.entity.CactusGolem;
 import dev.bergthaler.cubebuster.entity.EnderZombie;
 import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.RedZombie;
@@ -60,6 +61,14 @@ public final class ModEntityTypes {
                     .eyeHeight(1.74F)
                     .clientTrackingRange(8)
                     .build("screamer"));
+
+    // Same hitbox as vanilla IronGolem, which this extends.
+    public static final DeferredHolder<EntityType<?>, EntityType<CactusGolem>> CACTUS_GOLEM = ENTITY_TYPES.register("cactus_golem",
+            () -> EntityType.Builder.<CactusGolem>of(CactusGolem::new, MobCategory.MISC)
+                    .sized(1.4F, 2.7F)
+                    .eyeHeight(2.3F)
+                    .clientTrackingRange(10)
+                    .build("cactus_golem"));
 
     private ModEntityTypes() {
     }

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "cubebuster:sap" },
+    { "item": "cubebuster:sap" },
+    { "item": "cubebuster:sap" }
+  ],
+  "result": {
+    "id": "cubebuster:cactus_juice",
+    "count": 1
+  }
+}

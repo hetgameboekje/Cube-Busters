@@ -98,27 +98,37 @@ Tracks design status per mechanic discussed for Cube Busters. Status legend:
 ---
 
 ## Cactus Economy (early game)
-**Status: ✅ Fully specced — not built**
+**Status: ✅ Built**
+
+Blocks/behavior in `dev.bergthaler.cubebuster.block` (`BarbedWireBlock`, `ThornedBushBlock`,
+`CollapsingTrapdoorBlock`); shearing in `event/CactusShearHandler.java`; brewing wiring in
+`event/ModBrewingRecipes.java`; recipes under `data/cubebuster/recipes/`; tunables in `Config.java`
+("Cactus Economy" section).
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Barbed wire / thorned bush / collapsing trapdoor | ✅ | Easy to craft/find, vanilla-analog behavior |
-| Shearing → thorns + shaved cactus | ✅ | |
-| Shaved cactus → planks or sap | ✅ | |
-| Sap → juice → mocktail chain | ✅ | 1 cactus = 1 sap, 3 sap = 1 juice, filtered with ash via brewing stand |
-| No alcohol | ✅ | |
+| Barbed wire / thorned bush / collapsing trapdoor | ✅ | Barbed wire = cobweb-shaped hazard (slow + DoT); thorned bush = non-solid `BushBlock` with cactus-style contact damage; collapsing trapdoor springs open a configurable delay after something steps on it, then auto-recloses (reusable trap, not a one-shot break) |
+| Shearing → thorns + shaved cactus | ✅ | `CactusShearHandler` - shears + right-click on a cactus block |
+| Shaved cactus → planks or sap | ✅ | Both are separate crafting-table recipes off the same item |
+| Sap → juice → mocktail chain | ✅ | 1 cactus (or shaved cactus) = 1 sap, 3 sap = 1 juice; juice + ash at a brewing stand = mocktail (`ModBrewingRecipes`, `AnvilUpdateEvent`-style `RegisterBrewingRecipesEvent` hook). Ash is smelted from rotten flesh |
+| No alcohol | ✅ | No alcohol-themed items/flavor text anywhere in the chain |
 
 ---
 
 ## Cactus/Pumpkin Golem
-**Status: ✅ Fully specced — not built**
+**Status: ✅ Built**
+
+`entity/CactusGolem.java` (extends vanilla `IronGolem`, goals fully replaced - targets `Zombie` and
+subclasses, never players); Looting/degrade/repair logic in `event/CactusLimbHandler.java`; tunables
+in `Config.java` ("Cactus/Pumpkin Golem" section). Reuses vanilla's `IronGolemRenderer`/model
+wholesale rather than bespoke art - see the CLAUDE.md note for the follow-up.
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Base behavior | ✅ | Iron/snow golem–style, hugs zombies to death |
-| Looting enchant transfer | ✅ | Cactus-limb items only |
-| Item degradation | ✅ | Elytra-style (doesn't vanish on break) |
-| Repair | ✅ | Mending or anvil, thorns as repair material, fixed at 1 XP level |
+| Base behavior | ✅ | Iron golem–style, hugs zombie-family mobs to death (never players) |
+| Looting enchant transfer | ✅ | Cactus-limb items only. Vanilla's own Looting enchantment effect is hard-gated to player attackers (see `data/minecraft/enchantment/looting.json`'s `entity_properties: player` requirement), so this is a custom `LivingDropsEvent` handler that reads the limb's Looting level and duplicates drops with a per-level chance - an approximation of vanilla's loot reroll, not a byte-for-byte reproduction |
+| Item degradation | ✅ | Elytra-style: damage value is set directly rather than via `ItemStack#hurtAndBreak`, so it never vanishes/breaks at max damage, just stops granting Looting |
+| Repair | ✅ | Mending works via the `enchantable/durability` tag; anvil repair with thorns is fixed at 1 XP level via a custom `AnvilUpdateEvent` handler (bypasses vanilla's scaling cost) |
 
 ---
 

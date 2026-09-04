@@ -33,6 +33,18 @@ public final class ModCreativeModeTabs {
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T1.get());
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T2.get());
                                 output.accept(ModItems.PROTECTED_GLASS_PANE_T3.get());
+                                output.accept(ModItems.CACTUS_GOLEM_SPAWN_EGG.get());
+                                output.accept(ModItems.CACTUS_LIMB.get());
+                                output.accept(ModItems.THORNS.get());
+                                output.accept(ModItems.SHAVED_CACTUS.get());
+                                output.accept(ModItems.SAP.get());
+                                output.accept(ModItems.CACTUS_JUICE.get());
+                                output.accept(ModItems.ASH.get());
+                                output.accept(ModItems.MOCKTAIL.get());
+                                output.accept(ModItems.CACTUS_PLANKS.get());
+                                output.accept(ModItems.BARBED_WIRE.get());
+                                output.accept(ModItems.THORNED_BUSH.get());
+                                output.accept(ModItems.COLLAPSING_TRAPDOOR.get());
                             })
                             .build());
 
