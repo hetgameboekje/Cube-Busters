@@ -9,6 +9,7 @@ import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.InfectedCreeper;
 import dev.bergthaler.cubebuster.entity.MushSkeleton;
 import dev.bergthaler.cubebuster.entity.MushZombie;
+import dev.bergthaler.cubebuster.entity.HordeBoss;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
@@ -50,6 +51,7 @@ public final class ModSetupEvents {
         event.put(ModEntityTypes.MUSH_ZOMBIE.get(), MushZombie.createAttributes().build());
         event.put(ModEntityTypes.MUSH_SKELETON.get(), MushSkeleton.createAttributes().build());
         event.put(ModEntityTypes.CACTUS_GOLEM.get(), CactusGolem.createAttributes().build());
+        event.put(ModEntityTypes.HORDE_BOSS.get(), HordeBoss.createAttributes().build());
     }
 
     @SubscribeEvent

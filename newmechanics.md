@@ -65,21 +65,26 @@ Also added: `mush_infection` MobEffect (`effect/MushInfectionMobEffect.java`, `r
 ---
 
 ## Horde Boss (integration layer)
-**Status: 🟡 Partially decided**
+**Status: ✅ Built (needs real mush blocks to test end-to-end)**
 
 | Aspect | Status | Notes |
 |---|---|---|
-| Trigger condition | ✅ | Aggro score × mush block density near player |
-| Mush density check method | ❓ | Radius and counting method (block count vs. % coverage) undecided |
-| Recurring + loot | ✅ | Repeatable event, not one-time; drops loot |
-| Base daily cap | ✅ | 3 boss spawns per player per day |
-| Server-wide cap | ✅ | 15/day hard ceiling, whichever cap hits first applies |
-| Chunk clustering formula | ✅ | Chebyshev distance. ≤5 chunks = clustered (9 total shared cap); ≥6 chunks = spread (3/player individual cap). No dead zone between tiers |
-| Cap stickiness | ✅ | Cap consumption stays with the player even if they leave the cluster |
-| Config exposure | ✅ | All thresholds (3/9/15/5-chunk cutoff) must be config-adjustable |
-| Daily cap counter implementation | 🟡 | Cannot reuse vanilla mobcap (snapshot vs. persistent); needs custom per-player persistent counter, reset at day boundary |
-| Day/night pacing | ✅ | Modeled on 7 Days to Die — minimal buildup by day, ramps at night, ~500 ticks buffer |
-| Post-boss cooldown | ❓ | Undecided whether a cooldown separate from day/night pacing is needed |
+| Trigger condition | ✅ | Aggro score × mush block density near player, checked every `hordeBossCheckIntervalTicks`; see `event/HordeBossSpawnHandler.java` |
+| Mush density check method | ✅ | **Decided**: simple block-count within `hordeBossDensityRadius` blocks (cube scan), compared against `hordeBossTriggerThreshold` as the aggro×count product. Chosen over % ground-coverage - simpler to implement/tune, no need to define "ground" in 3D or normalize against terrain. See `event/HordeBossDensity.java` |
+| Recurring + loot | ✅ | `entity/HordeBoss.java` (bigger/tankier Zombie variant), loot at `data/cubebuster/loot_table/entities/horde_boss.json` |
+| Base daily cap | ✅ | `hordeBossPlayerDailyCap` (default 3) |
+| Server-wide cap | ✅ | `hordeBossServerDailyCap` (default 15), whichever cap hits first applies |
+| Chunk clustering formula | ✅ | Chebyshev distance via `hordeBossClusterChunkRadius` (default 5, inclusive - no dead zone). Clustered spawns share `hordeBossClusterCap` (default 9) *on top of* each player's own individual cap still applying - see `event/HordeBossSavedData.java` |
+| Cap stickiness | ✅ | Per-player daily count lives in the `HORDE_BOSS_CAP` data attachment and is never decremented/re-checked against current position - see `event/HordeBossCapManager.java` |
+| Config exposure | ✅ | All thresholds config-adjustable under the "Horde Boss" section of `Config.java` |
+| Daily cap counter implementation | ✅ | **Decided**: per-player count via the same data-attachment pattern as `AggroState`/`ModAttachmentTypes.AGGRO` (`event/HordeBossState.java` + `ModAttachmentTypes.HORDE_BOSS_CAP`); server-wide count + clustering via vanilla `SavedData` on the Overworld (`event/HordeBossSavedData.java`) - genuinely server-scoped state, not per-player, so `SavedData` rather than another attachment. Day boundary = world game time / 24000, not `getDayTime()` (sleep/commands can shift that) - see `HordeBossCapManager.currentDay` |
+| Day/night pacing | ✅ | Modeled on 7 Days to Die - `hordeBossDayPacingMultiplier` (default 0.05) during full daylight, linear ramp to full strength across a `hordeBossPacingRampTicks`-wide window (default 500) centered on dusk, full strength overnight, ramps back down across the same window centered on dawn. See `event/HordeBossPacing.java` |
+| Post-boss cooldown | ✅ | **Decided**: yes, a per-player cooldown (`hordeBossCooldownTicks`, default 12000 = half a day) starting the moment a boss spawns, tracked in the same `HordeBossState` attachment - day/night pacing alone doesn't prevent an immediate re-trigger right after a fight ends |
+
+**Still needed before this can be considered fully verified:** the Mush/Infected mechanic has since merged, and
+`data/cubebuster/tags/block/mush_blocks.json` now tags the real `cubebuster:mush_block` instead of the
+placeholder `minecraft:brown_mushroom_block`. The density scan, trigger math, caps, and pacing are all
+implemented and compile-verified, but haven't been played against real mush terrain in a running client/server.
 
 ---
 

@@ -8,6 +8,7 @@ import dev.bergthaler.cubebuster.entity.GreenZombie;
 import dev.bergthaler.cubebuster.entity.InfectedCreeper;
 import dev.bergthaler.cubebuster.entity.MushSkeleton;
 import dev.bergthaler.cubebuster.entity.MushZombie;
+import dev.bergthaler.cubebuster.entity.HordeBoss;
 import dev.bergthaler.cubebuster.entity.RedZombie;
 import dev.bergthaler.cubebuster.entity.Screamer;
 import dev.bergthaler.cubebuster.entity.SiegeZombie;
@@ -103,6 +104,15 @@ public final class ModEntityTypes {
                     .eyeHeight(2.3F)
                     .clientTrackingRange(10)
                     .build("cactus_golem"));
+
+    // Force-spawned only by the Horde Boss integration layer (HordeBossSpawnHandler) - no natural spawn
+    // placement. Bigger hitbox than the other variants so it reads as a boss at a glance.
+    public static final DeferredHolder<EntityType<?>, EntityType<HordeBoss>> HORDE_BOSS = ENTITY_TYPES.register("horde_boss",
+            () -> EntityType.Builder.<HordeBoss>of(HordeBoss::new, MobCategory.MONSTER)
+                    .sized(0.9F, 2.6F)
+                    .eyeHeight(2.3F)
+                    .clientTrackingRange(10)
+                    .build("horde_boss"));
 
     private ModEntityTypes() {
     }

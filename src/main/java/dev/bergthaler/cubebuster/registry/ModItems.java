@@ -166,6 +166,10 @@ public final class ModItems {
     public static final DeferredItem<DeferredSpawnEggItem> CACTUS_GOLEM_SPAWN_EGG = ITEMS.register("cactus_golem_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntityTypes.CACTUS_GOLEM, 0x2E7D32, 0xE59400, new Item.Properties()));
 
+    // Admin/testing spawn egg - in normal play HordeBoss is only force-spawned by HordeBossSpawnHandler.
+    public static final DeferredItem<DeferredSpawnEggItem> HORDE_BOSS_SPAWN_EGG = ITEMS.register("horde_boss_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntityTypes.HORDE_BOSS, 0x4A0E0E, 0xB02E26, new Item.Properties()));
+
     private ModItems() {
     }
 }

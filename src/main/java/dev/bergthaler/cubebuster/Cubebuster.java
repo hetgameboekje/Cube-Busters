@@ -7,6 +7,7 @@ import dev.bergthaler.cubebuster.client.GreenZombieRenderer;
 import dev.bergthaler.cubebuster.client.InfectedCreeperRenderer;
 import dev.bergthaler.cubebuster.client.MushSkeletonRenderer;
 import dev.bergthaler.cubebuster.client.MushZombieRenderer;
+import dev.bergthaler.cubebuster.client.HordeBossRenderer;
 import dev.bergthaler.cubebuster.client.RedZombieRenderer;
 import dev.bergthaler.cubebuster.client.ScreamerRenderer;
 import dev.bergthaler.cubebuster.client.SiegeZombieRenderer;
@@ -85,6 +86,7 @@ public class Cubebuster {
             // Reuses vanilla's IronGolemRenderer wholesale (CactusGolem extends IronGolem) rather than a bespoke
             // model/texture - functional placeholder, see CLAUDE.md for the follow-up note on custom art.
             event.registerEntityRenderer(ModEntityTypes.CACTUS_GOLEM.get(), IronGolemRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HORDE_BOSS.get(), HordeBossRenderer::new);
         }
 
         @SubscribeEvent
